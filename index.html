@@ -1,0 +1,1584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reaper's Coin</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#060408;--bg2:#100c10;--panel:#160e16;--border:#2e1428;
+  --gold:#c9a84c;--gold2:#e8c96d;--accent:#c42840;--accent2:#e53555;
+  --soul:#4fc3f7;--soul2:#81d4fa;--shield:#546e7a;--shield2:#78909c;
+  --text:#e8d5c0;--text2:#907070;--enemy2:#ab47bc;--eq2:#42a5f5;
+  --phase-bg:radial-gradient(ellipse at 30% 20%,#1a060e 0%,#060408 70%);
+  --phase-title-a:#c9a84c;--phase-title-b:#c42840;--phase-glow:rgba(196,40,64,.5);
+  --coin-l:radial-gradient(circle,#251a04,#150e02);--coin-s:radial-gradient(circle,#1e0810,#100408);
+}
+body.olympus{
+  --bg:#08070e;--bg2:#0e0c1a;--panel:#110f1c;--border:#2a2050;
+  --gold:#e8c96d;--gold2:#fff0a0;--accent:#5c6bc0;--accent2:#7986cb;
+  --soul:#b39ddb;--soul2:#d1c4e9;--shield:#4a7c59;--shield2:#66bb6a;
+  --text:#f0e8ff;--text2:#8878a8;--enemy2:#ffd700;--eq2:#f48fb1;
+  --phase-bg:radial-gradient(ellipse at 50% 0%,#1a1430 0%,#08070e 65%);
+  --phase-title-a:#fff0a0;--phase-title-b:#5c6bc0;--phase-glow:rgba(92,107,192,.6);
+  --coin-l:radial-gradient(circle,#1e1a08,#110e04);--coin-s:radial-gradient(circle,#0e0c1e,#060410);
+}
+body.norse{
+  --bg:#03060e;--bg2:#080c18;--panel:#0c1020;--border:#1e2840;
+  --gold:#b8a55a;--gold2:#d4c07a;--accent:#2e4a8a;--accent2:#4a6aaa;
+  --soul:#7eceff;--soul2:#a8dfff;--shield:#5c6870;--shield2:#7c8890;
+  --text:#d5dff0;--text2:#6878a0;--enemy2:#c0c8e0;--eq2:#a0c8ff;
+  --phase-bg:radial-gradient(ellipse at 50% 100%,#0a1428 0%,#03060e 60%);
+  --phase-title-a:#d4c07a;--phase-title-b:#4a6aaa;--phase-glow:rgba(74,106,170,.6);
+  --coin-l:radial-gradient(circle,#181408,#100e04);--coin-s:radial-gradient(circle,#080c18,#040810);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);font-family:'Crimson Text',serif;color:var(--text);min-height:100vh;overflow-x:hidden;background-image:var(--phase-bg);transition:background-image 1s,color .5s;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background-image:url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.013'%3E%3Ccircle cx='40' cy='40' r='1'/%3E%3C/g%3E%3C/svg%3E");}
+body.olympus::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.03;background-image:repeating-linear-gradient(45deg,transparent,transparent 10px,rgba(255,255,255,.3) 10px,rgba(255,255,255,.3) 11px),repeating-linear-gradient(-45deg,transparent,transparent 10px,rgba(255,255,255,.15) 10px,rgba(255,255,255,.15) 11px);}
+body.norse::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.025;background-image:repeating-linear-gradient(0deg,transparent,transparent 40px,rgba(100,140,200,.4) 40px,rgba(100,140,200,.4) 41px);}
+
+.screen{display:none;position:relative;z-index:1;}
+.screen.active{display:block;}
+
+/* TITLE */
+#title-screen{min-height:100vh;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 20px;}
+#title-screen.active{display:flex;}
+.title-glow{font-family:'Cinzel Decorative',serif;font-size:clamp(2.2rem,7vw,4.5rem);font-weight:900;background:linear-gradient(170deg,var(--phase-title-a) 0%,var(--gold) 40%,var(--phase-title-b) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:4px;margin-bottom:6px;filter:drop-shadow(0 0 30px rgba(201,168,76,.4));animation:titlePulse 3s ease-in-out infinite;}
+@keyframes titlePulse{0%,100%{filter:drop-shadow(0 0 20px rgba(201,168,76,.3));}50%{filter:drop-shadow(0 0 55px rgba(201,168,76,.7));}}
+.title-sub{font-family:'Cinzel Decorative',serif;font-size:clamp(.6rem,1.8vw,.9rem);color:var(--text2);letter-spacing:6px;margin-bottom:46px;text-transform:uppercase;}
+.coin-spin{width:100px;height:100px;margin:0 auto 46px;perspective:500px;}
+.coin-spin-inner{width:100%;height:100%;transform-style:preserve-3d;animation:titleSpin 5s linear infinite;border-radius:50%;}
+@keyframes titleSpin{to{transform:rotateY(360deg);}}
+.cs-face,.cs-back{position:absolute;inset:0;border-radius:50%;backface-visibility:hidden;display:flex;align-items:center;justify-content:center;font-size:2rem;border:3px solid;box-shadow:inset 0 0 14px rgba(0,0,0,.6);}
+.cs-face{background:var(--coin-l);border-color:var(--gold);}
+.cs-back{background:var(--coin-s);border-color:var(--accent2);transform:rotateY(180deg);}
+.btn-start{font-family:'Cinzel Decorative',serif;font-size:.95rem;letter-spacing:4px;padding:15px 46px;background:linear-gradient(135deg,var(--accent),#1a0820);color:var(--gold);border:2px solid var(--gold);cursor:pointer;text-transform:uppercase;clip-path:polygon(10px 0%,100% 0%,calc(100% - 10px) 100%,0% 100%);transition:all .3s;box-shadow:0 0 20px rgba(196,40,64,.3);}
+.btn-start:hover{background:linear-gradient(135deg,var(--accent2),var(--accent));box-shadow:0 0 40px var(--phase-glow);transform:translateY(-2px);}
+
+/* PHASE TRANSITIONS */
+.phase-trans{position:fixed;inset:0;z-index:500;display:none;align-items:center;justify-content:center;background:#000;flex-direction:column;gap:18px;text-align:center;padding:40px;}
+.phase-trans.active{display:flex;}
+.pt-icons{font-size:2.8rem;letter-spacing:14px;animation:floatIcons 2s ease-in-out infinite;}
+@keyframes floatIcons{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+.pt-title{font-family:'Cinzel Decorative',serif;font-size:clamp(1.4rem,5vw,2.8rem);background:linear-gradient(170deg,#fff0a0,#e8c96d,#5c6bc0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:ptGlow 2s ease-in-out infinite;}
+.pt-title-norse{font-family:'Cinzel Decorative',serif;font-size:clamp(1.4rem,5vw,2.8rem);background:linear-gradient(170deg,#d4c07a,#a8dfff,#4a6aaa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:ptGlowN 2s ease-in-out infinite;}
+@keyframes ptGlow{0%,100%{filter:drop-shadow(0 0 20px rgba(92,107,192,.4));}50%{filter:drop-shadow(0 0 50px rgba(92,107,192,.9));}}
+@keyframes ptGlowN{0%,100%{filter:drop-shadow(0 0 20px rgba(74,106,170,.4));}50%{filter:drop-shadow(0 0 50px rgba(74,106,170,.9));}}
+.pt-detail{color:#a0b0c0;font-size:.95rem;letter-spacing:3px;max-width:480px;line-height:1.6;}
+.pt-coin-note{color:#c9a84c;font-family:'Cinzel',serif;font-size:.8rem;letter-spacing:3px;margin-top:8px;padding:8px 18px;border:1px solid rgba(201,168,76,.25);border-radius:4px;}
+
+/* GAME SCREEN */
+#game-screen{min-height:100vh;display:none;flex-direction:column;padding:10px;gap:9px;}
+#game-screen.active{display:flex;}
+.top-bar{display:flex;align-items:center;justify-content:space-between;background:var(--panel);border:1px solid var(--border);padding:7px 14px;border-radius:4px;flex-wrap:wrap;gap:7px;transition:all .6s;}
+.player-name{font-family:'Cinzel Decorative',serif;font-size:.88rem;color:var(--gold);letter-spacing:2px;}
+.phase-badge{font-family:'Cinzel',serif;font-size:.65rem;letter-spacing:3px;padding:2px 9px;border-radius:10px;margin-left:7px;}
+.pb-p1{background:rgba(196,40,64,.1);color:var(--accent2);border:1px solid rgba(196,40,64,.3);}
+.pb-p2{background:rgba(92,107,192,.12);color:#9fa8da;border:1px solid rgba(92,107,192,.35);}
+.pb-p3{background:rgba(74,106,170,.12);color:#a8dfff;border:1px solid rgba(74,106,170,.35);}
+.stat-group{display:flex;gap:9px;align-items:center;flex-wrap:wrap;}
+.stat-pill{display:flex;align-items:center;gap:4px;background:rgba(0,0,0,.3);padding:4px 9px;border-radius:16px;border:1px solid rgba(255,255,255,.07);font-size:.8rem;}
+.stat-pill .v{font-weight:700;}
+.s-soul .v{color:var(--soul2);}.s-lv .v{color:var(--gold);}.s-hp .v{color:#ef9a9a;}.s-atk .v{color:var(--accent2);}
+
+.battle-area{display:grid;grid-template-columns:1fr 140px 1fr;gap:10px;align-items:start;}
+.combatant{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:14px;position:relative;box-shadow:0 8px 28px rgba(0,0,0,.6);transition:all .5s;}
+.combatant.p-card{border-color:rgba(201,168,76,.18);}
+.combatant.e-card{border-color:rgba(171,71,188,.18);}
+body.olympus .combatant.e-card{border-color:rgba(255,215,0,.22);}
+body.norse .combatant.e-card{border-color:rgba(74,106,170,.28);}
+.c-name{font-family:'Cinzel Decorative',serif;font-size:.78rem;letter-spacing:2px;margin-bottom:10px;}
+.p-card .c-name{color:var(--gold);}.e-card .c-name{color:var(--enemy2);}
+.e-sub{font-size:.65rem;color:var(--text2);display:block;margin-top:1px;}
+.bar-wrap{margin-bottom:7px;}
+.bar-label{display:flex;justify-content:space-between;font-size:.68rem;color:var(--text2);margin-bottom:2px;}
+.bar-track{height:8px;background:rgba(0,0,0,.5);border-radius:4px;overflow:hidden;border:1px solid rgba(255,255,255,.04);}
+.bar-fill{height:100%;border-radius:4px;transition:width .4s cubic-bezier(.4,0,.2,1);}
+.hp-fill{background:linear-gradient(90deg,#c62828,#e53935,#ef5350);}
+.sh-fill{background:linear-gradient(90deg,var(--shield),var(--shield2));}
+body.norse .sh-fill{background:linear-gradient(90deg,#3a5060,#5a7080);}
+.rage-fill{background:linear-gradient(90deg,#b71c1c,#f44336,#ff5722);}
+.c-stats{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;}
+.cs{font-size:.68rem;padding:2px 7px;border-radius:10px;border:1px solid;display:flex;align-items:center;gap:3px;}
+.cs.atk{color:#ef9a9a;border-color:#c62828;background:rgba(198,40,40,.1);}
+.cs.sh{color:#b0bec5;border-color:var(--shield);background:rgba(84,110,122,.1);}
+.cs.cr{color:#ffcc80;border-color:#f57c00;background:rgba(245,124,0,.1);}
+.cs.div{color:#ffd700;border-color:#b8860b;background:rgba(184,134,11,.1);}
+.cs.rage{color:#ff7043;border-color:#bf360c;background:rgba(191,54,12,.12);}
+.p-tag{display:inline-block;font-size:.6rem;padding:2px 6px;margin:2px;border-radius:3px;cursor:pointer;transition:all .2s;}
+.p-tag.passive{background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.22);color:var(--gold);}
+.p-tag.active-ab{background:rgba(196,40,64,.1);border:1px solid rgba(196,40,64,.35);color:#ef9a9a;}
+.p-tag.active-ab:hover{background:rgba(196,40,64,.22);}
+.p-tag.used-ab{opacity:.28;cursor:not-allowed;}
+.eq-tag{display:inline-block;font-size:.6rem;padding:2px 6px;margin:2px;border-radius:3px;background:rgba(66,165,245,.07);border:1px solid rgba(66,165,245,.22);color:var(--eq2);}
+.mastery-tag{display:inline-block;font-size:.6rem;padding:2px 6px;margin:2px;border-radius:3px;background:rgba(255,183,77,.1);border:1px solid rgba(255,183,77,.3);color:#ffb74d;}
+.debuff-tag{display:inline-block;font-size:.6rem;padding:2px 6px;margin:2px;border-radius:3px;background:rgba(196,40,64,.1);border:1px solid rgba(196,40,64,.3);color:#ef9a9a;}
+.passives-section{margin-top:7px;}
+.btn-bio{font-size:.58rem;font-family:'Cinzel',serif;letter-spacing:1px;padding:2px 7px;margin-left:5px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:3px;color:var(--text2);cursor:pointer;transition:all .2s;vertical-align:middle;}
+.btn-bio:hover{background:rgba(255,255,255,.1);color:var(--text);}
+.enemy-avatar{font-size:2.4rem;text-align:center;margin-bottom:5px;}
+
+/* BATTLE MID */
+.battle-mid{display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:6px;}
+.turn-ind{font-family:'Cinzel Decorative',serif;font-size:.52rem;letter-spacing:2px;color:var(--text2);text-align:center;text-transform:uppercase;}
+.turn-ind.pt{color:var(--gold);}.turn-ind.et{color:var(--enemy2);}.turn-ind.sk{color:var(--accent2);}
+.vs-text{font-family:'Cinzel Decorative',serif;font-size:1rem;color:var(--accent2);text-shadow:0 0 18px var(--phase-glow);}
+.coins-row{display:flex;gap:10px;justify-content:center;align-items:center;}
+.coin-wrap{width:72px;height:72px;perspective:360px;cursor:pointer;}
+.coin-3d{width:100%;height:100%;transform-style:preserve-3d;position:relative;}
+.coin-3d.flipping{animation:cFlip 1.1s ease-out forwards;}
+.coin-3d.flipping2{animation:cFlip 1.1s ease-out 0.14s forwards;}
+@keyframes cFlip{0%{transform:rotateX(0);}100%{transform:rotateX(1260deg);}}
+.cside{position:absolute;inset:0;border-radius:50%;backface-visibility:hidden;display:flex;align-items:center;justify-content:center;font-size:1.5rem;border:3px solid;box-shadow:inset 0 0 10px rgba(0,0,0,.6);}
+.cside.luck{background:var(--coin-l);border-color:var(--gold);}
+.cside.skull{background:var(--coin-s);border-color:var(--accent2);}
+.coin-res{font-family:'Cinzel Decorative',serif;font-size:.58rem;letter-spacing:2px;text-align:center;min-height:16px;}
+.coin-res.luck{color:var(--gold);}.coin-res.skull{color:var(--accent2);}.coin-res.mixed{color:#ce93d8;}
+.btn-flip{font-family:'Cinzel Decorative',serif;font-size:.6rem;letter-spacing:2px;padding:7px 12px;background:linear-gradient(135deg,var(--accent),#1a0820);color:var(--gold);border:1px solid var(--gold);cursor:pointer;text-transform:uppercase;clip-path:polygon(5px 0%,100% 0%,calc(100% - 5px) 100%,0% 100%);transition:all .2s;width:100%;}
+.btn-flip:hover:not(:disabled){background:linear-gradient(135deg,var(--accent2),var(--accent));box-shadow:0 0 16px var(--phase-glow);}
+.btn-flip:disabled{opacity:.32;cursor:not-allowed;}
+.btn-sm{font-family:'Cinzel Decorative',serif;font-size:.54rem;letter-spacing:1px;padding:5px 9px;background:rgba(255,255,255,.04);color:var(--text2);border:1px solid var(--border);cursor:pointer;width:100%;transition:all .2s;border-radius:3px;margin-top:2px;}
+.btn-sm:hover{background:rgba(255,255,255,.09);color:var(--text);}
+.wave-power{font-size:.6rem;color:var(--gold);text-align:center;font-family:'Cinzel',serif;letter-spacing:1px;opacity:.7;}
+.enemy-num{font-size:.6rem;color:var(--text2);text-align:center;}
+.queue-ind{font-size:.62rem;text-align:center;font-family:'Cinzel',serif;letter-spacing:1px;min-height:16px;}
+.queue-ind.luck{color:var(--gold);}.queue-ind.skull{color:var(--accent2);}
+
+/* HAND */
+.hand-area{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:12px;box-shadow:0 4px 16px rgba(0,0,0,.5);transition:all .5s;}
+.hand-title{font-family:'Cinzel Decorative',serif;font-size:.65rem;color:var(--text2);letter-spacing:3px;margin-bottom:9px;text-transform:uppercase;}
+.hand-title span{color:var(--gold);}.hand-title.skull-t span{color:var(--accent2);}
+.cards-row{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;}
+.card{width:100px;background:var(--bg2);border-radius:6px;border:2px solid;padding:9px 7px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;flex-shrink:0;}
+.card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.04),transparent);pointer-events:none;}
+.card:hover:not(.disabled){transform:translateY(-7px);filter:brightness(1.14);}
+.card.disabled{opacity:.28;cursor:not-allowed;}
+.card-icon{font-size:1.4rem;text-align:center;margin-bottom:4px;display:block;}
+.card-name{font-family:'Cinzel Decorative',serif;font-size:.52rem;text-align:center;letter-spacing:1px;margin-bottom:3px;text-transform:uppercase;}
+.card-desc{font-size:.62rem;color:var(--text2);text-align:center;line-height:1.2;}
+
+/* Card border/name colors - P1 Luck */
+.card.lk-atk{border-color:#c42840;}.card.lk-atk .card-name{color:#c42840;}
+.card.lk-true{border-color:#ce93d8;}.card.lk-true .card-name{color:#ce93d8;}
+.card.lk-heal{border-color:#43a870;}.card.lk-heal .card-name{color:#43a870;}
+.card.lk-shield{border-color:#78909c;}.card.lk-shield .card-name{color:#78909c;}
+.card.lk-skip{border-color:#80deea;}.card.lk-skip .card-name{color:#80deea;}
+.card.lk-crit{border-color:#ffa726;}.card.lk-crit .card-name{color:#ffa726;}
+.card.lk-usecrit{border-color:#ffb74d;}.card.lk-usecrit .card-name{color:#ffb74d;}
+.card.lk-steal{border-color:#f06292;}.card.lk-steal .card-name{color:#f06292;}
+.card.lk-ultra{border-color:#e8c96d;}.card.lk-ultra .card-name{color:#e8c96d;}
+/* P1 Skull */
+.card.sk-tax{border-color:#546e7a;}.card.sk-tax .card-name{color:#90a4ae;}
+.card.sk-drain{border-color:#37474f;}.card.sk-drain .card-name{color:#78909c;}
+.card.sk-self{border-color:#8b1a2a;}.card.sk-self .card-name{color:#c42840;}
+.card.sk-miss{border-color:#6d4c41;}.card.sk-miss .card-name{color:#a1887f;}
+.card.sk-chaos{border-color:#4a148c;}.card.sk-chaos .card-name{color:#ce93d8;}
+.card.sk-shatter{border-color:#37474f;}.card.sk-shatter .card-name{color:#607d8b;}
+.card.sk-curse{border-color:#880e4f;}.card.sk-curse .card-name{color:#f48fb1;}
+/* P2 Olympus Luck */
+.card.ol-bolt{border-color:#ffd700;}.card.ol-bolt .card-name{color:#ffd700;}
+.card.ol-aegis{border-color:#4a7c59;}.card.ol-aegis .card-name{color:#66bb6a;}
+.card.ol-tide{border-color:#0288d1;}.card.ol-tide .card-name{color:#4fc3f7;}
+.card.ol-wisdom{border-color:#7986cb;}.card.ol-wisdom .card-name{color:#9fa8da;}
+.card.ol-wrath{border-color:#ef6c00;}.card.ol-wrath .card-name{color:#ffa726;}
+.card.ol-forge{border-color:#f57c00;}.card.ol-forge .card-name{color:#ffcc80;}
+.card.ol-divine{border-color:#fff0a0;}.card.ol-divine .card-name{color:#fff0a0;}
+/* P2 Skull */
+.card.os-hera{border-color:#7b1fa2;}.card.os-hera .card-name{color:#ce93d8;}
+.card.os-flood{border-color:#1565c0;}.card.os-flood .card-name{color:#42a5f5;}
+.card.os-gaze{border-color:#2e7d32;}.card.os-gaze .card-name{color:#66bb6a;}
+.card.os-tar{border-color:#263238;}.card.os-tar .card-name{color:#78909c;}
+.card.os-fate{border-color:#880e4f;}.card.os-fate .card-name{color:#f48fb1;}
+.card.os-erase{border-color:#4a148c;}.card.os-erase .card-name{color:#ea80fc;}
+/* P3 Norse Luck */
+.card.nr-mjol{border-color:#a0c0e0;}.card.nr-mjol .card-name{color:#c0d8f0;}
+.card.nr-valhalla{border-color:#d4c07a;}.card.nr-valhalla .card-name{color:#d4c07a;}
+.card.nr-rune{border-color:#b8a55a;}.card.nr-rune .card-name{color:#b8a55a;}
+.card.nr-berserk{border-color:#c62828;}.card.nr-berserk .card-name{color:#ef5350;}
+.card.nr-ygg{border-color:#2e7d32;}.card.nr-ygg .card-name{color:#66bb6a;}
+.card.nr-allfather{border-color:#7eceff;}.card.nr-allfather .card-name{color:#7eceff;}
+.card.nr-frost{border-color:#0288d1;}.card.nr-frost .card-name{color:#4fc3f7;}
+.card.nr-thunder{border-color:#ffd700;}.card.nr-thunder .card-name{color:#ffd700;}
+.card.nr-ultra{border-color:#d4c07a;}.card.nr-ultra .card-name{color:#d4c07a;}
+/* P3 Norse Skull */
+.card.ns-loki{border-color:#880e4f;}.card.ns-loki .card-name{color:#f48fb1;}
+.card.ns-venom{border-color:#1b5e20;}.card.ns-venom .card-name{color:#4caf50;}
+.card.ns-hel{border-color:#1a0820;}.card.ns-hel .card-name{color:#9c27b0;}
+.card.ns-freeze{border-color:#01579b;}.card.ns-freeze .card-name{color:#29b6f6;}
+.card.ns-ragnarok{border-color:#b71c1c;}.card.ns-ragnarok .card-name{color:#ef5350;}
+
+/* LOG */
+.log-area{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:9px 12px;max-height:100px;overflow-y:auto;transition:all .5s;}
+.log-area::-webkit-scrollbar{width:3px;}.log-area::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.log-entry{font-size:.76rem;line-height:1.5;padding:1px 0;border-bottom:1px solid rgba(255,255,255,.022);}
+.log-entry:last-child{border-bottom:none;}
+.log-entry.good{color:#a5d6a7;}.log-entry.bad{color:#ef9a9a;}.log-entry.info{color:var(--gold);}
+.log-entry.neutral{color:var(--text2);}.log-entry.soul{color:var(--soul2);}.log-entry.skull-ev{color:var(--accent2);}
+.log-entry.true-dmg{color:#ce93d8;}.log-entry.divine{color:#ffd700;}.log-entry.norse{color:#a8dfff;}
+.log-entry.poison{color:#4caf50;}.log-entry.rage{color:#ff5722;}.log-entry.god-ab{color:#ffd700;}
+
+/* OVERLAYS */
+.overlay{display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.88);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:14px;}
+.overlay.active{display:flex;}
+.modal{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:24px;max-width:620px;width:100%;box-shadow:0 20px 70px rgba(0,0,0,.8);animation:modalIn .28s cubic-bezier(.34,1.56,.64,1);transition:all .5s;}
+@keyframes modalIn{from{transform:scale(.8) translateY(18px);opacity:0;}to{transform:scale(1) translateY(0);opacity:1;}}
+.modal-title{font-family:'Cinzel Decorative',serif;font-size:1rem;color:var(--gold);text-align:center;margin-bottom:5px;letter-spacing:3px;}
+.modal-sub{text-align:center;color:var(--text2);font-size:.8rem;margin-bottom:16px;}
+.btn-close{font-family:'Cinzel Decorative',serif;font-size:.68rem;letter-spacing:2px;padding:9px 20px;margin-top:14px;background:rgba(255,255,255,.04);color:var(--text2);border:1px solid var(--border);cursor:pointer;width:100%;transition:all .2s;}
+.btn-close:hover{background:rgba(255,255,255,.09);color:var(--text);}
+
+/* ABILITY DROP */
+.abil-choices{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+.abil-card{flex:1;min-width:148px;max-width:188px;background:var(--bg2);border:2px solid var(--border);border-radius:6px;padding:16px 12px;cursor:pointer;text-align:center;transition:all .28s;}
+.abil-card:hover{border-color:var(--gold);transform:translateY(-4px);box-shadow:0 8px 24px rgba(201,168,76,.18);}
+.abil-icon{font-size:1.9rem;margin-bottom:8px;display:block;}
+.abil-name{font-family:'Cinzel Decorative',serif;font-size:.68rem;color:var(--gold);margin-bottom:5px;letter-spacing:2px;}
+.abil-desc{font-size:.74rem;color:var(--text2);line-height:1.32;}
+.abil-type{font-size:.58rem;margin-top:5px;padding:2px 6px;border-radius:3px;display:inline-block;}
+.abil-type.passive{background:rgba(201,168,76,.1);color:var(--gold);border:1px solid rgba(201,168,76,.25);}
+.abil-type.active{background:rgba(196,40,64,.1);color:#ef9a9a;border:1px solid rgba(196,40,64,.3);}
+
+/* VICTORY */
+#victory-screen{min-height:100vh;display:none;flex-direction:column;align-items:center;justify-content:center;padding:36px 18px;gap:18px;}
+#victory-screen.active{display:flex;}
+.victory-title{font-family:'Cinzel Decorative',serif;font-size:2rem;color:var(--gold);text-shadow:0 0 36px rgba(201,168,76,.5);}
+.victory-sub{color:var(--text2);font-size:.92rem;}
+.victory-options{display:flex;gap:13px;flex-wrap:wrap;justify-content:center;margin-top:6px;}
+.v-option{width:152px;background:var(--panel);border:2px solid var(--border);border-radius:8px;padding:20px 12px;cursor:pointer;text-align:center;transition:all .28s;position:relative;}
+.v-option.disabled-opt{opacity:.33;cursor:not-allowed;pointer-events:none;}
+.v-option.disabled-opt::after{content:'CLAIMED';position:absolute;top:7px;right:7px;font-size:.52rem;font-family:'Cinzel',serif;letter-spacing:2px;color:var(--gold);background:rgba(201,168,76,.1);padding:2px 5px;border-radius:3px;border:1px solid rgba(201,168,76,.3);}
+.v-option:hover:not(.disabled-opt){transform:translateY(-4px);}
+.v-icon{font-size:2.1rem;margin-bottom:9px;}
+.v-name{font-family:'Cinzel Decorative',serif;font-size:.72rem;letter-spacing:2px;margin-bottom:4px;}
+.v-option.v-equip .v-name{color:var(--eq2);}.v-option.v-equip:hover{border-color:var(--eq2);box-shadow:0 8px 24px rgba(66,165,245,.18);}
+.v-option.v-shop .v-name{color:var(--soul2);}.v-option.v-shop:hover{border-color:var(--soul2);box-shadow:0 8px 24px rgba(79,195,247,.18);}
+.v-option.v-wheel .v-name{color:var(--gold);}.v-option.v-wheel:hover{border-color:var(--gold);box-shadow:0 8px 24px rgba(201,168,76,.18);}
+.v-option.v-mastery .v-name{color:#ffb74d;}.v-option.v-mastery:hover{border-color:#ffb74d;box-shadow:0 8px 24px rgba(255,183,77,.18);}
+.v-desc{font-size:.7rem;color:var(--text2);}
+.btn-continue{font-family:'Cinzel Decorative',serif;font-size:.78rem;letter-spacing:3px;padding:11px 32px;background:linear-gradient(135deg,var(--accent),#1a0820);color:var(--gold);border:1px solid var(--gold);cursor:pointer;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);transition:all .2s;}
+.btn-continue:hover{background:linear-gradient(135deg,var(--accent2),var(--accent));box-shadow:0 0 18px var(--phase-glow);}
+
+/* SHOP */
+.shop-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:7px;}
+.shop-item{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:11px;cursor:pointer;transition:all .2s;}
+.shop-item:hover:not(.cant-afford){border-color:var(--soul2);box-shadow:0 4px 14px rgba(79,195,247,.12);}
+.shop-item.cant-afford{opacity:.3;cursor:not-allowed;}
+.item-name{font-family:'Cinzel Decorative',serif;font-size:.65rem;color:var(--soul2);margin-bottom:2px;}
+.item-desc{font-size:.7rem;color:var(--text2);margin-bottom:5px;}
+.item-cost{font-size:.7rem;color:var(--soul);}
+
+/* EQUIPMENT */
+.eq-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:7px;}
+.eq-card{background:var(--bg2);border:2px solid rgba(66,165,245,.16);border-radius:6px;padding:14px;cursor:pointer;text-align:center;transition:all .28s;}
+.eq-card:hover{border-color:var(--eq2);transform:translateY(-3px);box-shadow:0 6px 20px rgba(66,165,245,.16);}
+.eq-icon{font-size:1.7rem;margin-bottom:7px;}
+.eq-name{font-family:'Cinzel Decorative',serif;font-size:.65rem;color:var(--eq2);margin-bottom:4px;letter-spacing:2px;}
+.eq-desc{font-size:.7rem;color:var(--text2);}
+
+/* MASTERY */
+.mastery-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:7px;}
+.mastery-card{background:var(--bg2);border:2px solid var(--border);border-radius:6px;padding:12px;cursor:pointer;text-align:center;transition:all .24s;}
+.mastery-card:hover{border-color:#ffb74d;transform:translateY(-3px);box-shadow:0 6px 18px rgba(255,183,77,.18);}
+.mastery-icon{font-size:1.7rem;margin-bottom:6px;}
+.mastery-name{font-family:'Cinzel Decorative',serif;font-size:.64rem;color:#ffb74d;margin-bottom:3px;letter-spacing:2px;}
+.mastery-desc{font-size:.7rem;color:var(--text2);}
+.mastery-current{font-size:.6rem;margin-top:4px;}
+
+/* WHEEL */
+.wheel-container{display:flex;flex-direction:column;align-items:center;gap:14px;}
+.wheel-outer{position:relative;width:250px;height:250px;}
+.wheel-pointer{position:absolute;top:-11px;left:50%;transform:translateX(-50%);font-size:1.5rem;z-index:10;filter:drop-shadow(0 0 7px rgba(201,168,76,.8));}
+#spin-wheel{border-radius:50%;border:4px solid var(--gold);box-shadow:0 0 24px rgba(201,168,76,.22);}
+.wheel-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:36px;height:36px;background:var(--bg);border-radius:50%;border:3px solid var(--gold);z-index:5;display:flex;align-items:center;justify-content:center;font-size:.85rem;}
+.btn-spin{font-family:'Cinzel Decorative',serif;font-size:.78rem;letter-spacing:3px;padding:10px 28px;background:linear-gradient(135deg,var(--accent),#1a0820);color:var(--gold);border:1px solid var(--gold);cursor:pointer;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);transition:all .2s;}
+.btn-spin:hover:not(:disabled){background:linear-gradient(135deg,var(--accent2),var(--accent));box-shadow:0 0 16px var(--phase-glow);}
+.btn-spin:disabled{opacity:.38;cursor:not-allowed;}
+.wheel-result{font-family:'Cinzel Decorative',serif;font-size:.9rem;color:var(--gold);text-align:center;min-height:24px;letter-spacing:2px;}
+
+/* LEVEL UP */
+.lu-reward{background:var(--bg2);border:1px solid rgba(201,168,76,.3);border-radius:6px;padding:14px;text-align:center;margin:12px 0;}
+.lu-icon{font-size:1.9rem;margin-bottom:7px;}
+.lu-name{font-family:'Cinzel Decorative',serif;color:var(--gold);font-size:.8rem;}
+.lu-desc{color:var(--text2);font-size:.78rem;margin-top:4px;}
+.btn-accept{font-family:'Cinzel Decorative',serif;font-size:.76rem;letter-spacing:3px;padding:10px 26px;background:linear-gradient(135deg,var(--accent),#1a0820);color:var(--gold);border:1px solid var(--gold);cursor:pointer;width:100%;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);transition:all .2s;margin-top:5px;}
+.btn-accept:hover{background:linear-gradient(135deg,var(--accent2),var(--accent));}
+
+/* BIO */
+.bio-content{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:16px;margin-top:7px;}
+.bio-avatar{font-size:3.2rem;text-align:center;margin-bottom:7px;}
+.bio-lore{font-size:.86rem;color:var(--text2);line-height:1.7;font-style:italic;}
+.bio-stats{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;justify-content:center;}
+.bio-stat{font-size:.7rem;padding:2px 9px;border-radius:10px;background:rgba(0,0,0,.3);border:1px solid var(--border);color:var(--text2);}
+.bio-stat span{color:var(--gold);}
+
+/* GAME OVER */
+#gameover-screen{min-height:100vh;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:36px;gap:16px;}
+#gameover-screen.active{display:flex;}
+.go-title{font-family:'Cinzel Decorative',serif;font-size:2.4rem;color:var(--accent2);text-shadow:0 0 36px var(--phase-glow);}
+.go-sub{color:var(--text2);font-size:.95rem;}
+.go-stats{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:18px 36px;}
+.go-stat{font-size:.88rem;padding:4px 0;border-bottom:1px solid var(--border);}
+.go-stat:last-child{border-bottom:none;}
+.go-stat span{color:var(--gold);font-weight:700;}
+
+/* FX */
+.dmg-flash{position:absolute;inset:0;border-radius:6px;pointer-events:none;animation:flash .38s ease-out forwards;}
+@keyframes flash{0%{opacity:.7;}100%{opacity:0;}}
+.dmg-flash.red{background:rgba(196,40,64,.3);}.dmg-flash.green{background:rgba(46,125,82,.3);}
+.dmg-flash.blue{background:rgba(84,110,122,.3);}.dmg-flash.purple{background:rgba(156,39,176,.3);}
+.dmg-flash.gold{background:rgba(201,168,76,.35);}.dmg-flash.lightning{background:rgba(255,235,59,.38);}
+.dmg-flash.poison{background:rgba(76,175,80,.3);}
+.float-text{position:fixed;font-family:'Cinzel Decorative',serif;font-size:1rem;font-weight:700;pointer-events:none;z-index:200;animation:floatUp 1.2s ease-out forwards;}
+@keyframes floatUp{0%{transform:translateY(0);opacity:1;}100%{transform:translateY(-72px);opacity:0;}}
+
+@media(max-width:680px){
+  .battle-area{grid-template-columns:1fr;}
+  .battle-mid{flex-direction:row;flex-wrap:wrap;justify-content:center;}
+  .shop-grid,.eq-grid,.mastery-grid{grid-template-columns:1fr;}
+  .victory-options{gap:8px;}
+  .v-option{width:130px;}
+}
+</style>
+</head>
+<body>
+
+<!-- TITLE -->
+<div id="title-screen" class="screen active">
+  <div class="title-glow">Reaper's Coin</div>
+  <div class="title-sub">Underworld · Olympus · Ragnarok</div>
+  <div class="coin-spin"><div class="coin-spin-inner"><div class="cs-face">☀️</div><div class="cs-back">💀</div></div></div>
+  <button class="btn-start" onclick="startGame()">Seal Your Fate</button>
+</div>
+
+<!-- OLYMPUS TRANSITION -->
+<div id="olympus-trans" class="phase-trans">
+  <div class="pt-icons">⚡ 🏛️ ⚡</div>
+  <div class="pt-title">THE GODS TAKE NOTICE</div>
+  <div class="pt-detail">You survived the Underworld. Now Olympus sends its champions. The rules change. The stakes rise.</div>
+  <div class="pt-coin-note">⚠ TWO COINS NOW FLIP — Your luck resets. Rebuild your fortune.</div>
+</div>
+
+<!-- NORSE TRANSITION -->
+<div id="norse-trans" class="phase-trans">
+  <div class="pt-icons">🔨 🌌 🐺</div>
+  <div class="pt-title-norse">RAGNAROK BEGINS</div>
+  <div class="pt-detail">The World Serpent stirs. The wolf breaks free. The Norse gods have been watching — and they are not impressed by your victories so far.</div>
+  <div class="pt-coin-note">⚠ The two coins remain. Luck still resets. Nothing you've done has prepared you for this.</div>
+</div>
+
+<!-- GAME -->
+<div id="game-screen" class="screen">
+  <div class="top-bar">
+    <div style="display:flex;align-items:center;gap:5px;">
+      <div class="player-name">☠ The Reaper</div>
+      <span class="phase-badge pb-p1" id="phase-badge">UNDERWORLD</span>
+    </div>
+    <div class="stat-group">
+      <div class="stat-pill s-soul">👻<span class="v" id="t-souls">0</span></div>
+      <div class="stat-pill s-lv">LV<span class="v" id="t-lv">1</span></div>
+      <div class="stat-pill s-hp">❤<span class="v" id="t-hp">100</span><span style="color:var(--text2);font-size:.65rem">/<span id="t-maxhp">100</span></span></div>
+      <div class="stat-pill s-atk">⚔<span class="v" id="t-atk">15</span></div>
+    </div>
+  </div>
+
+  <div class="battle-area">
+    <div class="combatant p-card" id="p-card">
+      <div class="c-name">☠ The Reaper</div>
+      <div class="bar-wrap">
+        <div class="bar-label"><span>❤ HP</span><span id="php-t">100/100</span></div>
+        <div class="bar-track"><div class="bar-fill hp-fill" id="php-b" style="width:100%"></div></div>
+      </div>
+      <div class="bar-wrap">
+        <div class="bar-label"><span>🛡 Shield</span><span id="psh-t">0</span></div>
+        <div class="bar-track"><div class="bar-fill sh-fill" id="psh-b" style="width:0%"></div></div>
+      </div>
+      <div class="c-stats">
+        <div class="cs atk">⚔ <span id="patk-v">15</span></div>
+        <div class="cs sh">🛡 <span id="psh-v">0</span></div>
+        <div class="cs cr">💥 <span id="pcr-v">0</span></div>
+      </div>
+      <div class="passives-section" id="p-passives"></div>
+      <div id="p-equip"></div>
+      <div id="p-debuffs"></div>
+    </div>
+
+    <div class="battle-mid">
+      <div class="turn-ind" id="turn-ind">Flip to begin</div>
+      <div class="vs-text">VS</div>
+      <div class="coins-row" onclick="flipCoin()">
+        <div class="coin-wrap"><div class="coin-3d" id="coin1"><div class="cside luck">☀️</div><div class="cside skull" style="transform:rotateX(180deg)">💀</div></div></div>
+        <div class="coin-wrap" id="coin2-wrap" style="display:none"><div class="coin-3d" id="coin2"><div class="cside luck">☀️</div><div class="cside skull" style="transform:rotateX(180deg)">💀</div></div></div>
+      </div>
+      <div class="coin-res" id="coin-res">— FLIP —</div>
+      <div class="queue-ind" id="queue-ind"></div>
+      <button class="btn-flip" id="flip-btn" onclick="flipCoin()">Flip Coin</button>
+      <button class="btn-sm" onclick="openShop()">🛒 Shop</button>
+      <div class="wave-power" id="wave-power">Card Power +0</div>
+      <div class="enemy-num" id="enemy-num">Enemy 1 · Wave 1</div>
+    </div>
+
+    <div class="combatant e-card" id="e-card">
+      <div class="enemy-avatar" id="e-avatar">💀</div>
+      <div class="c-name"><span id="e-name">?</span><button class="btn-bio" onclick="openBio()">📖 Bio</button><span class="e-sub" id="e-sub"></span></div>
+      <div class="bar-wrap">
+        <div class="bar-label"><span>❤ HP</span><span id="ehp-t">?</span></div>
+        <div class="bar-track"><div class="bar-fill hp-fill" id="ehp-b" style="width:100%"></div></div>
+      </div>
+      <div class="bar-wrap">
+        <div class="bar-label"><span id="esh-label">🛡 Shield</span><span id="esh-t">0</span></div>
+        <div class="bar-track"><div class="bar-fill sh-fill" id="esh-b" style="width:0%"></div></div>
+      </div>
+      <div class="bar-wrap" id="rage-bar-wrap" style="display:none">
+        <div class="bar-label"><span>🔥 Spartan Rage</span><span id="rage-t">0/100</span></div>
+        <div class="bar-track"><div class="bar-fill rage-fill" id="rage-b" style="width:0%"></div></div>
+      </div>
+      <div class="c-stats">
+        <div class="cs atk">⚔ <span id="eatk-v">?</span></div>
+        <div class="cs div" id="e-divine-stat" style="display:none">✦ <span id="ediv-v">0</span> divine</div>
+      </div>
+      <div id="e-specials"></div>
+    </div>
+  </div>
+
+  <div class="hand-area">
+    <div class="hand-title" id="hand-title">Hand — <span id="hand-status">Flip the coin</span></div>
+    <div class="cards-row" id="cards-row"></div>
+  </div>
+  <div class="log-area" id="log-area"></div>
+</div>
+
+<!-- VICTORY -->
+<div id="victory-screen" class="screen">
+  <div class="victory-title" id="v-title">⚔ ENEMY SLAIN ⚔</div>
+  <div class="victory-sub" id="v-sub">Choose your reward.</div>
+  <div class="victory-options">
+    <div class="v-option v-equip" id="equip-opt" onclick="openEquipment()"><div class="v-icon">⚙️</div><div class="v-name">Equipment</div><div class="v-desc">One per wave</div></div>
+    <div class="v-option v-shop" onclick="openVShop()"><div class="v-icon">🛒</div><div class="v-name">Soul Market</div><div class="v-desc">Spend souls</div></div>
+    <div class="v-option v-wheel" onclick="openWheel()"><div class="v-icon">🎰</div><div class="v-name">Soul Grind</div><div class="v-desc">Spin for luck</div></div>
+    <div class="v-option v-mastery" id="mastery-opt" onclick="openMastery()"><div class="v-icon">📈</div><div class="v-name">Card Mastery</div><div class="v-desc">One per wave</div></div>
+  </div>
+  <button class="btn-continue" id="continue-btn" onclick="continueToNext()" style="display:none">⚔ Next Enemy ⚔</button>
+</div>
+
+<!-- GAME OVER -->
+<div id="gameover-screen" class="screen">
+  <div class="go-title">SOUL TAKEN</div>
+  <div class="go-sub" id="go-sub">Your flame has been extinguished.</div>
+  <div class="go-stats">
+    <div class="go-stat">Phase Reached: <span id="go-phase">Underworld</span></div>
+    <div class="go-stat">Enemies Slain: <span id="go-kills">0</span></div>
+    <div class="go-stat">Level: <span id="go-lv">1</span></div>
+    <div class="go-stat">Souls Collected: <span id="go-souls">0</span></div>
+    <div class="go-stat">Passives Gained: <span id="go-pass">0</span></div>
+  </div>
+  <button class="btn-start" onclick="location.reload()">Rise Again</button>
+</div>
+
+<!-- MODALS -->
+<div class="overlay" id="abil-overlay">
+  <div class="modal">
+    <div class="modal-title" id="abil-title">⚔ Ability Drop</div>
+    <div class="modal-sub">The soul fractures — claim one power.</div>
+    <div class="abil-choices" id="abil-choices"></div>
+  </div>
+</div>
+<div class="overlay" id="shop-overlay">
+  <div class="modal">
+    <div class="modal-title">🛒 Soul Market</div>
+    <div class="modal-sub">Souls: <span id="shop-soul-cnt" style="color:var(--soul2);font-weight:700">0</span></div>
+    <div class="shop-grid" id="shop-grid"></div>
+    <button class="btn-close" id="shop-close-btn">Leave Market</button>
+  </div>
+</div>
+<div class="overlay" id="equip-overlay">
+  <div class="modal">
+    <div class="modal-title">⚙️ Equipment Drop</div>
+    <div class="modal-sub">Choose one piece of gear to equip permanently.</div>
+    <div class="eq-grid" id="eq-grid"></div>
+    <button class="btn-close" onclick="closeEquip()">Skip</button>
+  </div>
+</div>
+<div class="overlay" id="mastery-overlay">
+  <div class="modal">
+    <div class="modal-title">📈 Card Mastery</div>
+    <div class="modal-sub">Permanently buff one card type. Stacks each wave.</div>
+    <div class="mastery-grid" id="mastery-grid"></div>
+    <button class="btn-close" onclick="closeMastery()">Skip</button>
+  </div>
+</div>
+<div class="overlay" id="wheel-overlay">
+  <div class="modal">
+    <div class="modal-title">🎰 Soul Grind</div>
+    <div class="modal-sub">Spin once — fate decides.</div>
+    <div class="wheel-container">
+      <div class="wheel-outer"><div class="wheel-pointer">▼</div><canvas id="spin-wheel" width="250" height="250"></canvas><div class="wheel-center">☠</div></div>
+      <div class="wheel-result" id="wheel-result"></div>
+      <button class="btn-spin" id="spin-btn" onclick="spinWheel()">SPIN</button>
+    </div>
+    <button class="btn-close" id="wheel-close-btn" onclick="closeWheel()" style="display:none">Continue</button>
+  </div>
+</div>
+<div class="overlay" id="levelup-overlay">
+  <div class="modal">
+    <div class="modal-title">✨ Level Up!</div>
+    <div class="modal-sub" id="lu-sub">You have grown stronger.</div>
+    <div class="lu-reward" id="lu-reward"></div>
+    <button class="btn-accept" onclick="acceptLevelUp()">Accept Power</button>
+  </div>
+</div>
+<div class="overlay" id="bio-overlay">
+  <div class="modal">
+    <div class="modal-title" id="bio-title">📖 Enemy Bio</div>
+    <div class="bio-content">
+      <div class="bio-avatar" id="bio-avatar">💀</div>
+      <div class="bio-lore" id="bio-lore"></div>
+      <div class="bio-stats" id="bio-stats"></div>
+    </div>
+    <button class="btn-close" onclick="document.getElementById('bio-overlay').classList.remove('active')">Close</button>
+  </div>
+</div>
+
+<script>
+// ═══════ CARD POOLS ═══════
+
+const LUCK_P1=[
+  {id:'atk',cls:'lk-atk',icon:'⚔️',name:'Soul Strike',desc:'Deal ATK + power damage',w:22,
+    play(G){let d=calcAtk(G)+cp(G,'atk');dealE(G,d,false);floatT(`-${d}`,'e-card','#ef5350');flash('e-card','red');return{msg:`⚔️ Soul Strike: ${d} dmg`,t:'good'};}},
+  {id:'true',cls:'lk-true',icon:'🔮',name:'Void Pierce',desc:'True damage — bypasses shields',w:12,
+    play(G){let d=G.p.atk+10+cp(G,'true')+eqB(G,'true_bonus');dealET(G,d);floatT(`-${d} TRUE`,'e-card','#ce93d8');flash('e-card','purple');return{msg:`🔮 Void Pierce: ${d} true`,t:'true-dmg'};}},
+  {id:'heal',cls:'lk-heal',icon:'💊',name:'Soul Mend',desc:'Restore HP',w:18,
+    play(G){let h=20+cp(G,'heal')+eqB(G,'heal_b');if(hasP(G,'harvest_blade'))h+=8;G.p.hp=Math.min(G.p.hp+h,G.p.maxHp);floatT(`+${h}❤`,'p-card','#81c784');flash('p-card','green');return{msg:`💊 Soul Mend: +${h} HP`,t:'good'};}},
+  {id:'shield',cls:'lk-shield',icon:'🛡️',name:'Bone Ward',desc:'Gain shield',w:16,
+    play(G){let s=26+cp(G,'shield')+eqB(G,'sh_b');if(hasP(G,'ocean_armor'))s=Math.floor(s*1.5);G.p.shield=Math.min(G.p.shield+s,G.p.maxShield);floatT(`+${s}🛡`,'p-card','#78909c');flash('p-card','blue');return{msg:`🛡️ Bone Ward: +${s} shield`,t:'good'};}},
+  {id:'skip',cls:'lk-skip',icon:'😴',name:'Haunt',desc:'Enemy skips next attack',w:8,
+    play(G){G.enemySkip=true;floatT('HAUNTED','e-card','#80deea');return{msg:`😴 Haunt: Enemy stunned!`,t:'info'};}},
+  {id:'crit',cls:'lk-crit',icon:'💥',name:'Crit Charge',desc:'Store a crit for bonus damage',w:15,
+    play(G){G.p.crits++;if(hasP(G,'blood_pact')){G.p.maxHp+=4;G.p.hp=Math.min(G.p.hp+4,G.p.maxHp);}floatT(`+1💥`,'p-card','#ffa726');return{msg:`💥 Crit Charge: ${G.p.crits} stored`,t:'good'};}},
+  {id:'usecrit',cls:'lk-usecrit',icon:'💢',name:'Crit Release',desc:'Unleash all stored crits',w:10,
+    play(G){if(G.p.crits===0)return{msg:'💢 No crits stored.',t:'neutral'};
+      let pp=30+G.critDmg-30+(hasP(G,'mass_sword')?15:0)+cp(G,'crit');
+      let t=calcAtk(G)+G.p.crits*pp;G.p.crits=0;
+      dealE(G,t,false);floatT(`-${t}💢`,'e-card','#ffb74d');flash('e-card','red');
+      if(hasP(G,'wars_hunger')){G.p.atk+=8;log("⚔️ War's Hunger: +8 ATK from crit release!",'good');}
+      return{msg:`💢 Crit Release: ${t} total!`,t:'good'};}},
+  {id:'steal',cls:'lk-steal',icon:'🩸',name:'Life Siphon',desc:'Deal damage + steal HP',w:9,
+    play(G){let d=G.p.atk+5+cp(G,'atk');dealE(G,d,false);
+      let pct=hasP(G,'inf_hunger')?.8:.6;
+      let h=Math.floor(d*pct);G.p.hp=Math.min(G.p.hp+h,G.p.maxHp);
+      floatT(`-${d}`,'e-card','#ef5350');floatT(`+${h}❤`,'p-card','#f06292');flash('p-card','green');
+      return{msg:`🩸 Life Siphon: ${d} dmg / +${h} HP`,t:'good'};}},
+  {id:'ultra',cls:'lk-ultra',icon:'✨',name:'LIFE GAIN',desc:'✦ 2% ULTRA ✦ Full restore',w:0,
+    play(G){G.p.hp=G.p.maxHp;G.p.shield=G.p.maxShield;floatT('FULL RESTORE','p-card','#e8c96d');flash('p-card','gold');return{msg:`✨ LIFE GAIN! Fully restored!`,t:'info'};}},
+];
+
+const SKULL_P1=[
+  {id:'tax',cls:'sk-tax',icon:'💸',name:'Soul Tax',desc:'Lose souls — death collects',w:22,
+    play(G){let l=Math.min(G.p.souls,8+G.wave*2);G.p.souls=Math.max(0,G.p.souls-l);return{msg:`💸 Soul Tax: Lost ${l} souls`,t:'skull-ev'};}},
+  {id:'drain',cls:'sk-drain',icon:'💔',name:'Crit Drain',desc:'All stored crits vanish',w:18,
+    play(G){let c=G.p.crits;G.p.crits=0;return{msg:`💔 Crit Drain: Lost ${c} crits`,t:'skull-ev'};}},
+  {id:'self',cls:'sk-self',icon:'🩸',name:'Self Wound',desc:'Take self-damage',w:20,
+    play(G){let d=14+G.wave*2;if(hasP(G,'titans_will')&&!G.titansWillUsed&&G.p.hp-d<=0){G.titansWillUsed=true;G.p.hp=15;return{msg:`🩸 Self Wound negated by Titan's Will — left at 15 HP`,t:'skull-ev'};}
+      G.p.hp=Math.max(1,G.p.hp-d);floatT(`-${d}💀`,'p-card','#ef5350');flash('p-card','red');return{msg:`🩸 Self Wound: ${d} self-damage`,t:'skull-ev'};}},
+  {id:'miss',cls:'sk-miss',icon:'❌',name:'Misfire',desc:'Next attack misses completely',w:18,
+    play(G){G.missNext=true;return{msg:`❌ Misfire: Next attack will miss`,t:'skull-ev'};}},
+  {id:'chaos',cls:'sk-chaos',icon:'🎲',name:'Chaos Pulse',desc:'Randomizes HP for both sides',w:10,
+    play(G){G.p.hp=Math.floor(Math.random()*G.p.maxHp)+20;G.p.shield=Math.floor(Math.random()*G.p.maxShield);
+      G.e.hp=Math.floor(Math.random()*G.e.maxHp)+30;G.e.shield=Math.floor(Math.random()*G.e.maxShield);
+      flash('p-card','purple');flash('e-card','purple');return{msg:`🎲 Chaos Pulse: Everything randomized!`,t:'skull-ev'};}},
+  {id:'shatter',cls:'sk-shatter',icon:'💀',name:'Soul Shatter',desc:'Permanently lose 18 max HP',w:12,
+    play(G){G.p.maxHp=Math.max(40,G.p.maxHp-18);G.p.hp=Math.min(G.p.hp,G.p.maxHp);flash('p-card','red');return{msg:`💀 Soul Shatter: -18 max HP permanently`,t:'skull-ev'};}},
+  {id:'cursed',cls:'sk-curse',icon:'🩹',name:'Cursed Wound',desc:'Take 10 damage for the next 3 turns',w:12,
+    play(G){G.cursedWound=3;return{msg:`🩹 Cursed Wound: 10 damage/turn for 3 turns`,t:'skull-ev'};}},
+];
+
+// Phase 2 Luck — mix of P1 carries + Olympus-exclusive (less OP, more tactical)
+const LUCK_P2=[
+  {id:'atk',cls:'lk-atk',icon:'⚔️',name:'Soul Strike',desc:'Deal ATK + power damage',w:16,
+    play(G){let d=calcAtk(G)+cp(G,'atk');dealE(G,d,false);floatT(`-${d}`,'e-card','#ef5350');flash('e-card','red');return{msg:`⚔️ Soul Strike: ${d} dmg`,t:'good'};}},
+  {id:'heal',cls:'lk-heal',icon:'💊',name:'Soul Mend',desc:'Restore HP',w:14,
+    play(G){let h=18+cp(G,'heal')+eqB(G,'heal_b');if(hasP(G,'harvest_blade'))h+=8;G.p.hp=Math.min(G.p.hp+h,G.p.maxHp);floatT(`+${h}❤`,'p-card','#81c784');flash('p-card','green');return{msg:`💊 Soul Mend: +${h} HP`,t:'good'};}},
+  {id:'crit',cls:'lk-crit',icon:'💥',name:'Crit Charge',desc:'Store a crit',w:12,
+    play(G){G.p.crits++;if(hasP(G,'blood_pact')){G.p.maxHp+=4;G.p.hp=Math.min(G.p.hp+4,G.p.maxHp);}floatT(`+1💥`,'p-card','#ffa726');return{msg:`💥 Crit Charge: ${G.p.crits} stored`,t:'good'};}},
+  {id:'bolt',cls:'ol-bolt',icon:'⚡',name:"Zeus's Bolt",desc:'24 true dmg + stun enemy',w:10,
+    play(G){let d=24+cp(G,'true');dealET(G,d);G.enemySkip=true;floatT(`-${d}⚡`,'e-card','#ffd700');flash('e-card','lightning');return{msg:`⚡ Zeus's Bolt: ${d} true + stunned!`,t:'divine'};}},
+  {id:'aegis',cls:'ol-aegis',icon:'🛡️',name:"Athena's Aegis",desc:'Gain 32 shield + reflect next hit',w:11,
+    play(G){let s=32+cp(G,'shield')+eqB(G,'sh_b');G.p.shield=Math.min(G.p.shield+s,G.p.maxShield);G.divineReflect=true;floatT(`+${s}🛡`,'p-card','#66bb6a');flash('p-card','gold');return{msg:`🛡️ Athena's Aegis: +${s} shield + reflect active`,t:'divine'};}},
+  {id:'tide',cls:'ol-tide',icon:'🌊',name:"Poseidon's Tide",desc:'Two hits at 65% ATK each',w:10,
+    play(G){let d1=Math.floor((calcAtk(G)+cp(G,'atk'))*.65),d2=Math.floor((calcAtk(G)+cp(G,'atk'))*.65);
+      dealE(G,d1,false);setTimeout(()=>{if(G.e&&G.e.hp>0)dealE(G,d2,false);renderAll();},280);
+      floatT(`-${d1}🌊`,'e-card','#4fc3f7');flash('e-card','blue');return{msg:`🌊 Poseidon's Tide: ${d1}+${d2} dmg`,t:'divine'};}},
+  {id:'wrath',cls:'ol-wrath',icon:'⚔️',name:"Ares' Wrath",desc:'3 rapid strikes (ATK×0.4 each)',w:9,
+    play(G){let d=Math.floor((calcAtk(G)+cp(G,'atk'))*.4);let total=0;
+      for(let i=0;i<3;i++){dealE(G,d,false);total+=d;}floatT(`-${total}⚔`,'e-card','#ffa726');flash('e-card','red');return{msg:`⚔️ Ares' Wrath: 3×${d}=${total} total`,t:'divine'};}},
+  {id:'forge',cls:'ol-forge',icon:'🔨',name:"Hephaestus' Forge",desc:'Permanently +7 ATK',w:8,
+    play(G){G.p.atk+=7;floatT(`+7⚔`,'p-card','#ffcc80');flash('p-card','gold');return{msg:`🔨 Forge: +7 ATK permanently (now ${G.p.atk})`,t:'divine'};}},
+  {id:'divine',cls:'ol-divine',icon:'✦',name:'Divine Judgment',desc:'40 true damage',w:7,
+    play(G){let d=40+cp(G,'true');dealET(G,d);floatT(`-${d}✦`,'e-card','#fff0a0');flash('e-card','gold');return{msg:`✦ Divine Judgment: ${d} true damage!`,t:'divine'};}},
+  {id:'ultra',cls:'lk-ultra',icon:'✨',name:'DIVINE GRACE',desc:'✦ 2% ULTRA ✦ Full restore',w:0,
+    play(G){G.p.hp=G.p.maxHp;G.p.shield=G.p.maxShield;floatT('DIVINE GRACE','p-card','#fff0a0');flash('p-card','gold');return{msg:`✨ DIVINE GRACE! Fully restored!`,t:'divine'};}},
+];
+
+const SKULL_P2=[
+  {id:'hera',cls:'os-hera',icon:'👑',name:"Hera's Curse",desc:'Lose ATK and max HP',w:20,
+    play(G){let a=Math.min(7,G.p.atk-5);G.p.atk=Math.max(5,G.p.atk-a);G.p.maxHp=Math.max(50,G.p.maxHp-14);G.p.hp=Math.min(G.p.hp,G.p.maxHp);flash('p-card','purple');return{msg:`👑 Hera's Curse: -${a} ATK, -14 max HP`,t:'skull-ev'};}},
+  {id:'flood',cls:'os-flood',icon:'🌊',name:"Poseidon's Flood",desc:'Lose all shield + take 28 damage',w:18,
+    play(G){G.p.shield=0;G.p.hp=Math.max(1,G.p.hp-28);floatT(`-28🌊`,'p-card','#42a5f5');flash('p-card','blue');return{msg:`🌊 Flood: Lost all shield + 28 damage`,t:'skull-ev'};}},
+  {id:'gaze',cls:'os-gaze',icon:'🐍',name:"Medusa's Gaze",desc:'Petrified — skip your next action',w:16,
+    play(G){G.petrified=true;floatT('PETRIFIED','p-card','#66bb6a');return{msg:`🐍 Medusa's Gaze: Petrified! Turn skipped`,t:'skull-ev'};}},
+  {id:'tar',cls:'os-tar',icon:'🕳️',name:'Tartarus Pull',desc:'Lose souls AND take 22 damage',w:16,
+    play(G){let l=Math.min(G.p.souls,14);G.p.souls=Math.max(0,G.p.souls-l);G.p.hp=Math.max(1,G.p.hp-22);flash('p-card','purple');return{msg:`🕳️ Tartarus: -${l} souls and -22 HP`,t:'skull-ev'};}},
+  {id:'fate',cls:'os-fate',icon:'✂️',name:"Fates' Cut",desc:'Max HP halved until next victory',w:14,
+    play(G){G.p.maxHp=Math.max(50,Math.floor(G.p.maxHp*.55));G.p.hp=Math.min(G.p.hp,G.p.maxHp);G.fateCut=true;flash('p-card','red');return{msg:`✂️ Fates' Cut: Max HP now ${G.p.maxHp}!`,t:'skull-ev'};}},
+  {id:'erase',cls:'os-erase',icon:'👁️',name:'Divine Erasure',desc:'Lose a random passive permanently',w:12,
+    play(G){if(G.p.passives.length===0)return{msg:`👁️ Divine Erasure: No passives to erase`,t:'skull-ev'};
+      const i=Math.floor(Math.random()*G.p.passives.length);const lost=G.p.passives.splice(i,1)[0];
+      flash('p-card','purple');return{msg:`👁️ Divine Erasure: Lost ${lost.name} forever!`,t:'skull-ev'};}},
+];
+
+// Phase 3 Norse Luck
+const LUCK_P3=[
+  {id:'mjol',cls:'nr-mjol',icon:'🔨',name:'Mjolnir',desc:'Massive hit + stun (you take 8 recoil)',w:10,
+    play(G){let d=Math.floor((calcAtk(G)+cp(G,'atk'))*2.2);dealE(G,d,false);G.enemySkip=true;G.p.hp=Math.max(1,G.p.hp-8);floatT(`-${d}🔨`,'e-card','#c0d8f0');flash('e-card','lightning');return{msg:`🔨 Mjolnir: ${d} dmg + stun! (8 recoil)`,t:'norse'};}},
+  {id:'valhalla',cls:'nr-valhalla',icon:'🛡️',name:'Valhalla Gate',desc:'Below 40% HP: full restore. Otherwise +50 HP',w:9,
+    play(G){if(G.p.hp/G.p.maxHp<.4){G.p.hp=G.p.maxHp;G.p.shield=G.p.maxShield;floatT('VALHALLA','p-card','#d4c07a');flash('p-card','gold');return{msg:`🛡️ Valhalla Gate: Full restore from near death!`,t:'norse'};}
+      else{G.p.hp=Math.min(G.p.hp+50,G.p.maxHp);floatT(`+50❤`,'p-card','#d4c07a');return{msg:`🛡️ Valhalla Gate: +50 HP`,t:'good'};}}},
+  {id:'rune',cls:'nr-rune',icon:'ᚱ',name:'Rune Carve',desc:'Permanently +8 ATK',w:8,
+    play(G){G.p.atk+=8;floatT(`+8⚔`,'p-card','#b8a55a');flash('p-card','gold');return{msg:`ᚱ Rune Carve: +8 ATK (now ${G.p.atk})`,t:'norse'};}},
+  {id:'berserk',cls:'nr-berserk',icon:'🔥',name:"Berserker's Blood",desc:'Skull cards deal 30 dmg to enemy this battle',w:9,
+    play(G){G.berserkerBlood=true;floatT('BERSERK','p-card','#ef5350');flash('p-card','red');return{msg:`🔥 Berserker's Blood: Skulls now deal 30 enemy dmg!`,t:'norse'};}},
+  {id:'ygg',cls:'nr-ygg',icon:'🌳',name:'Yggdrasil',desc:'Restore 38% of missing HP',w:11,
+    play(G){let h=Math.floor((G.p.maxHp-G.p.hp)*.38)+12;G.p.hp=Math.min(G.p.hp+h,G.p.maxHp);floatT(`+${h}❤`,'p-card','#66bb6a');flash('p-card','green');return{msg:`🌳 Yggdrasil: +${h} HP (${38}% of missing)`,t:'norse'};}},
+  {id:'allfather',cls:'nr-allfather',icon:'👁️',name:"Allfather's Verdict",desc:'Deal 7% of enemy max HP as true damage',w:8,
+    play(G){let d=Math.floor(G.e.maxHp*.07)+cp(G,'true');dealET(G,d);floatT(`-${d}👁`,'e-card','#7eceff');flash('e-card','blue');return{msg:`👁️ Allfather's Verdict: ${d} true (7% of max HP)`,t:'norse'};}},
+  {id:'frost',cls:'nr-frost',icon:'❄️',name:'Frost Lance',desc:'40 true dmg + reduce enemy ATK by 10',w:9,
+    play(G){let d=40+cp(G,'true');dealET(G,d);G.e.atk=Math.max(5,G.e.atk-10);floatT(`-${d}❄`,'e-card','#4fc3f7');flash('e-card','blue');return{msg:`❄️ Frost Lance: ${d} true + enemy ATK -10`,t:'norse'};}},
+  {id:'thunder',cls:'nr-thunder',icon:'⚡',name:'Thunder God',desc:'4 hits at 65% ATK each',w:8,
+    play(G){let d=Math.floor((calcAtk(G)+cp(G,'atk'))*.65);let tot=0;for(let i=0;i<4;i++){dealE(G,d,false);tot+=d;}floatT(`-${tot}⚡`,'e-card','#ffd700');flash('e-card','lightning');return{msg:`⚡ Thunder God: 4×${d}=${tot} total`,t:'norse'};}},
+  {id:'ultra',cls:'nr-ultra',icon:'✨',name:'RAGNAROK SPARK',desc:'✦ 2% ULTRA ✦ Full restore + clear debuffs',w:0,
+    play(G){G.p.hp=G.p.maxHp;G.p.shield=G.p.maxShield;G.poisonTurns=0;G.cursedWound=0;G.frozenAbil=0;G.deathMark=0;floatT('RAGNAROK SPARK','p-card','#d4c07a');flash('p-card','gold');return{msg:`✨ RAGNAROK SPARK: Full restore + all debuffs cleared!`,t:'norse'};}},
+];
+
+const SKULL_P3=[
+  {id:'loki',cls:'ns-loki',icon:'🃏',name:"Loki's Trick",desc:'Lose a random passive permanently',w:22,
+    play(G){if(G.p.passives.length===0)return{msg:`🃏 Loki's Trick: No passives to steal`,t:'skull-ev'};
+      const i=Math.floor(Math.random()*G.p.passives.length);const lost=G.p.passives.splice(i,1)[0];
+      if(G.berserkerBlood){dealET(G,30);log('🔥 Berserker counter: 30 true to enemy!','good');}
+      flash('p-card','purple');return{msg:`🃏 Loki's Trick: Lost ${lost.name} forever!`,t:'skull-ev'};}},
+  {id:'venom',cls:'ns-venom',icon:'🐍',name:'Serpent Venom',desc:'Poisoned — 20 damage for 3 turns',w:20,
+    play(G){G.poisonTurns=3;G.poisonDmg=20;floatT('POISONED','p-card','#4caf50');
+      if(G.berserkerBlood){dealET(G,30);log('🔥 Berserker counter: 30 true to enemy!','good');}
+      return{msg:`🐍 Serpent Venom: 20 damage/turn for 3 turns`,t:'skull-ev'};}},
+  {id:'hel',cls:'ns-hel',icon:'💀',name:"Hel's Grasp",desc:'Lose 30% of current HP + can\'t heal next turn',w:18,
+    play(G){let d=Math.floor(G.p.hp*.3);G.p.hp=Math.max(1,G.p.hp-d);G.noHealTurns=1;flash('p-card','purple');floatT(`-${d}☠`,'p-card','#9c27b0');
+      if(G.berserkerBlood){dealET(G,30);log('🔥 Berserker counter: 30 true to enemy!','good');}
+      return{msg:`💀 Hel's Grasp: -${d} HP + no healing next turn`,t:'skull-ev'};}},
+  {id:'freeze',cls:'ns-freeze',icon:'🧊',name:'Niflheim Freeze',desc:'Active abilities frozen for 2 turns',w:18,
+    play(G){G.frozenAbil=2;G.p.shield=Math.max(0,G.p.shield-20);floatT('FROZEN','p-card','#29b6f6');flash('p-card','blue');
+      if(G.berserkerBlood){dealET(G,30);log('🔥 Berserker counter: 30 true to enemy!','good');}
+      return{msg:`🧊 Niflheim Freeze: Active abilities locked 2 turns, -20 shield`,t:'skull-ev'};}},
+  {id:'ragna',cls:'ns-ragnarok',icon:'🌋',name:'Ragnarok Rend',desc:'Both sides take 25% of their max HP as damage',w:14,
+    play(G){let pd=Math.floor(G.p.maxHp*.25),ed=Math.floor(G.e.maxHp*.25);
+      G.p.hp=Math.max(1,G.p.hp-pd);G.e.hp=Math.max(1,G.e.hp-ed);
+      flash('p-card','red');flash('e-card','red');
+      if(G.berserkerBlood){dealET(G,30);log('🔥 Berserker counter: 30 true to enemy!','good');}
+      return{msg:`🌋 Ragnarok Rend: You -${pd} HP, Enemy -${ed} HP`,t:'skull-ev'};}},
+];
+
+// ═══════ GOD ABILITIES ═══════
+const GOD_AB={
+  'Hermes':[
+    {name:'Quick Strike',fn(G){let d1=Math.floor(G.e.atk*.55),d2=Math.floor(G.e.atk*.55);playerTakeDmg(G,d1);setTimeout(()=>{playerTakeDmg(G,d2);renderAll();},220);log(`🪶 Hermes Quick Strike: ${d1}+${d2} double hit!`,'god-ab');}},
+    {name:'Divine Speed',fn(G){let sh=Math.floor(G.e.maxShield*.3);G.e.shield=Math.min(G.e.shield+sh,G.e.maxShield);log(`🪶 Hermes Divine Speed: +${sh} shield regenerated`,'bad');}},
+  ],
+  'Demeter':[
+    {name:'Harvest',fn(G){let h=Math.floor(G.e.maxHp*.12);G.e.hp=Math.min(G.e.hp+h,G.e.maxHp);floatT(`+${h}❤`,'e-card','#66bb6a');log(`🌾 Demeter Harvest: Self-heals ${h} HP`,'bad');}},
+    {name:'Famine',fn(G){G.p.maxHp=Math.max(50,G.p.maxHp-12);G.p.hp=Math.min(G.p.hp,G.p.maxHp);flash('p-card','purple');log(`🌾 Demeter Famine: Your max HP reduced by 12`,'bad');}},
+  ],
+  'Ares':[
+    {name:'War Cry',fn(G){G.eWarcry=2;log(`⚔️ Ares War Cry: Next 2 attacks deal 1.5x!`,'bad');floatT('WAR CRY','e-card','#ffa726');}},
+    {name:'Bloodlust',fn(G){let d=Math.floor(G.e.atk*1.1);playerTakeDmg(G,d);let h=Math.floor(d*.4);G.e.hp=Math.min(G.e.hp+h,G.e.maxHp);log(`⚔️ Ares Bloodlust: ${d} dmg + self-heals ${h}`,'bad');}},
+  ],
+  'Poseidon':[
+    {name:'Tidal Surge',fn(G){G.p.shield=0;let d=Math.floor(G.e.atk*1.2);playerTakeDmg(G,d);log(`🔱 Poseidon Tidal Surge: Wipes shield + ${d} damage!`,'bad');flash('p-card','blue');}},
+    {name:'Depth Crush',fn(G){let d=Math.floor(G.p.maxHp*.12);playerTakeDmg(G,d);log(`🔱 Poseidon Depth Crush: ${d} HP damage (12% of your max)`,'bad');}},
+  ],
+  'Athena':[
+    {name:'Aegis Stance',fn(G){G.e.shield=Math.min(G.e.shield+110,G.e.maxShield);floatT('+110🛡','e-card','#9fa8da');log(`🦉 Athena Aegis Stance: +110 divine shield!`,'bad');}},
+    {name:'Counter Mark',fn(G){G.eCounterMark=true;log(`🦉 Athena Counter Mark: Will reflect 30% of next attack`,'bad');}},
+  ],
+  'Apollo':[
+    {name:'Sun Beam',fn(G){let d=Math.floor(G.e.atk*.85);playerTakeDmg(G,d);G.eSunMark=true;log(`☀️ Apollo Sun Beam: ${d} + your next hit you take +25%`,'bad');}},
+    {name:'Prophecy',fn(G){G.forcedSkull=true;log(`☀️ Apollo Prophecy: Your next coin flip is forced to SKULL!`,'bad');floatT('PROPHECY','p-card','#ce93d8');}},
+  ],
+  'Zeus':[
+    {name:'Lightning Storm',fn(G){let d=Math.floor(G.e.atk*.7);for(let i=0;i<3;i++){setTimeout(()=>{playerTakeDmg(G,d);renderAll();},i*180);}log(`⚡ Zeus Lightning Storm: 3 strikes × ${d}!`,'bad');}},
+    {name:'Divine Authority',fn(G){G.p.shield=0;G.petrified=true;let d=Math.floor(G.e.atk*.9);playerTakeDmg(G,d);log(`⚡ Zeus Divine Authority: Shield wiped + ${d} + you're petrified!`,'bad');}},
+    {name:'Thunderous Might',fn(G){G.e.atk=Math.floor(G.e.atk*1.2);log(`⚡ Zeus Thunderous Might: ATK boosted to ${G.e.atk}!`,'bad');floatT(`ATK↑${G.e.atk}`,'e-card','#ffd700');}},
+  ],
+  'Kratos':[
+    {name:'Blades of Chaos',fn(G){let d1=Math.floor(G.e.atk*.8),d2=Math.floor(G.e.atk*.7);playerTakeDmg(G,d1);setTimeout(()=>{playerTakeDmg(G,d2);renderAll();},200);log(`⚔️ Kratos Blades of Chaos: ${d1}+${d2} ignores 50% shield`,'bad');}},
+    {name:'Spartan Rage',fn(G){let d=Math.floor(G.e.atk*2.5);G.kratosRage=0;playerTakeDmg(G,d);log(`🔥 SPARTAN RAGE: ${d} MASSIVE damage!! Rage resets.`,'rage');flash('e-card','red');floatT(`SPARTAN RAGE!`,'e-card','#ff5722');}},
+  ],
+  // Norse
+  'Fenrir':[
+    {name:'Savage Bite',fn(G){let d=Math.floor(G.e.atk*.6);for(let i=0;i<3;i++)setTimeout(()=>{playerTakeDmg(G,d);renderAll();},i*150);log(`🐺 Fenrir Savage Bite: 3×${d} rapid strikes!`,'bad');}},
+    {name:'Pack Howl',fn(G){G.e.atk=Math.floor(G.e.atk*1.15);G.enemySkip=false;log(`🐺 Fenrir Pack Howl: ATK risen to ${G.e.atk}!`,'bad');}},
+  ],
+  'Jormungandr':[
+    {name:'Venom Spit',fn(G){G.poisonTurns=4;G.poisonDmg=22;floatT('VENOMED','p-card','#4caf50');flash('p-card','poison');log(`🐍 Jormungandr Venom: 22 dmg/turn for 4 turns!`,'bad');}},
+    {name:'Coil Crush',fn(G){G.p.shield=0;let d=Math.floor(G.e.atk*1.4);playerTakeDmg(G,d);log(`🐍 Jormungandr Coil: Shield wiped + ${d} crush damage!`,'bad');}},
+  ],
+  'Valkyrie':[
+    {name:'Judgement Strike',fn(G){G.p.shield=0;let d=Math.floor(G.e.atk*1.1);playerTakeDmg(G,d);log(`⚔️ Valkyrie Judgement: Shield removed + ${d} true strike`,'bad');}},
+    {name:'Shield Maiden',fn(G){let sh=Math.floor(G.e.maxShield*.35);G.e.shield=Math.min(G.e.shield+sh,G.e.maxShield);G.e.hp=Math.min(G.e.hp+Math.floor(G.e.maxHp*.08),G.e.maxHp);log(`⚔️ Valkyrie Shield Maiden: +${sh} shield + heals 8%`,'bad');}},
+  ],
+  'Loki':[
+    {name:'Illusion',fn(G){G.lokiDodge=true;let d=Math.floor(G.e.atk*.7);playerTakeDmg(G,d);log(`🃏 Loki Illusion: Dodge active + ${d} counterstrike!`,'bad');}},
+    {name:'Shapeshrift',fn(G){const effects=[()=>{G.p.crits=0;log('🃏 Loki Shapeshrift: All crits stolen!','bad');},()=>{G.p.souls=Math.max(0,G.p.souls-20);log('🃏 Loki Shapeshrift: -20 souls!','bad');},()=>{let d=Math.floor(G.e.atk*.9);playerTakeDmg(G,d);log(`🃏 Loki Shapeshrift: ${d} surprise strike!`,'bad');}];effects[Math.floor(Math.random()*effects.length)]();}},
+  ],
+  'Thor':[
+    {name:'Lightning Barrage',fn(G){let d=Math.floor(G.e.atk*.5);for(let i=0;i<3;i++){dealEnemyTrue_reverse(G,d);}log(`🔨 Thor Lightning Barrage: 3×${d} true damage to you!`,'bad');}},
+    {name:'Mjolnir Smash',fn(G){G.p.shield=0;let d=Math.floor(G.e.atk*1.6);playerTakeDmg(G,d);log(`🔨 Thor Mjolnir Smash: Shield wiped + ${d} devastating!`,'bad');flash('p-card','lightning');}},
+  ],
+  'Odin':[
+    {name:"Raven's Vision",fn(G){let sh=Math.floor(G.e.maxShield*.45);G.e.shield=Math.min(G.e.shield+sh,G.e.maxShield);G.forcedSkull=true;log(`👁️ Odin Ravens: +${sh} shield + your next flip is FORCED SKULL`,'bad');}},
+    {name:'Gungnir Throw',fn(G){let d=Math.floor(G.e.atk*1.3);G.e.hp=Math.max(0,G.e.hp);playerTakeDmg(G,d);G.p.shield=0;log(`👁️ Odin Gungnir: ${d} TRUE piercing damage + shield wiped!`,'bad');}},
+  ],
+  'Hela':[
+    {name:'Soul Drain',fn(G){let d=Math.floor(G.p.hp*.18);G.p.hp=Math.max(1,G.p.hp-d);G.e.hp=Math.min(G.e.hp+Math.floor(d*.7),G.e.maxHp);floatT(`-${d}☠`,'p-card','#9c27b0');log(`💀 Hela Soul Drain: Drained ${d} HP from you (heals her ${Math.floor(d*.7)})!`,'bad');}},
+    {name:'Death Mark',fn(G){G.deathMark=3;log(`💀 Hela Death Mark: You take +35% extra damage for 3 turns!`,'bad');floatT('DEATH MARK','p-card','#9c27b0');}},
+    {name:'Helheim',fn(G){if(G.p.passives.length>0){const i=Math.floor(Math.random()*G.p.passives.length);const lost=G.p.passives.splice(i,1)[0];log(`💀 Hela Helheim: Consumed your ${lost.name} passive!`,'bad');}else{let d=Math.floor(G.e.atk*1.3);playerTakeDmg(G,d);log(`💀 Hela Helheim: ${d} devastating strike!`,'bad');}}},
+  ],
+};
+
+// ═══════ ENEMIES ═══════
+const EP1=[
+  {name:'The Hollow',sub:'Restless Dead',av:'💀',bhp:120,bsh:10,batk:8,
+   bio:"A soul too stubborn to pass on. The Hollow wanders the first layer of the underworld, feeding on wandering spirits. It has no memory of life — only the hunger that kept it from the void.",
+   drops:[{name:'Death Mark',icon:'🎯',desc:'3% chance to instantly kill enemy',effect:'instant_death',atype:'passive'},
+          {name:'Soul Drain',icon:'👻',desc:'+2 souls when dealing damage',effect:'soul_drain',atype:'passive'}]},
+  {name:'Bone Warden',sub:'Skeletal Guardian',av:'🦴',bhp:170,bsh:30,batk:11,
+   bio:"Once a knight of a forgotten kingdom, the Bone Warden was cursed to guard the gates of the second layer forever. Its armor has fused with its bones over centuries of waiting.",
+   drops:[{name:'Iron Bones',icon:'🦴',desc:'Start each battle with +20 shield',effect:'iron_bones',atype:'passive'},
+          {name:'Splinter Strike',icon:'💢',desc:'10% chance attacks deal 1.8x damage',effect:'splinter',atype:'passive'}]},
+  {name:'Void Specter',sub:'Dimensional Horror',av:'👁️',bhp:220,bsh:22,batk:15,
+   bio:"Not from this realm or any other. The Void Specter slipped through a crack in reality when the underworld was young. It does not think or feel — it simply unmakes.",
+   drops:[{name:'Void Touch',icon:'🌑',desc:'Attacks ignore 25% of enemy shield',effect:'void_touch',atype:'passive'},
+          {name:'Echo Step',icon:'👣',desc:'[ACTIVE] Dodge one attack — consumed on use',effect:'echo_step',atype:'active'}]},
+  {name:'Crimson Lich',sub:'Blood Mage',av:'🧙',bhp:270,bsh:50,batk:20,
+   bio:"A necromancer who refused death by binding their soul to their own blood. Every drop spilled in battle fuels their power. They have been in the underworld's third layer for a thousand years.",
+   drops:[{name:'Blood Pact',icon:'🩸',desc:'+4 max HP when storing a crit',effect:'blood_pact',atype:'passive'},
+          {name:'Mass Sword',icon:'⚔️',desc:'+15 true dmg per crit on release',effect:'mass_sword',atype:'passive'}]},
+  {name:'Soul Colossus',sub:'Ancient Titan',av:'🗿',bhp:355,bsh:80,batk:25,
+   bio:"Built in the age before gods to guard the boundary between life and death. Its creators are gone but it remembers its purpose. It does not hate you — it simply cannot let you pass.",
+   drops:[{name:"Titan's Will",icon:'🗿',desc:'One killing blow instead leaves you at 15 HP (once per battle)',effect:'titans_will',atype:'passive'},
+          {name:'Colossus Crush',icon:'💥',desc:'+10 flat damage on every attack',effect:'colossus_crush',atype:'passive'}]},
+  {name:'Death Itself',sub:'The Final Judge',av:'☠️',bhp:465,bsh:120,batk:32,
+   bio:"Death is not a being — it is a role. When you defeat the one who holds it, that role must be filled. The current Death took the mantle willingly after losing everything. It is fair, methodical, and without mercy.",
+   drops:[{name:'Undying',icon:'♾️',desc:'[ACTIVE] Revive once with 40 HP — consumed on use',effect:'undying',atype:'active'},
+          {name:"Reaper's Edge",icon:'🌙',desc:'All attacks deal +30% damage',effect:'reapers_edge',atype:'passive'}]},
+  {name:'The Abyss',sub:'Infinite Void',av:'🌌',bhp:595,bsh:165,batk:40,
+   bio:"There is no biography for The Abyss. It predates language. Scholars who tried to study it simply stopped writing. What remains in their journals is just: 'it looked back.'",
+   drops:[{name:'Void Ascension',icon:'✦',desc:'+20 ATK and +40 max HP',effect:'void_ascension',atype:'passive'},
+          {name:'Infinite Hunger',icon:'∞',desc:'Life Siphon heals 80% of damage',effect:'inf_hunger',atype:'passive'}]},
+];
+
+const EP2=[
+  {name:'Hermes',sub:'Messenger of Gods',av:'🪶',bhp:620,bsh:90,batk:42,divine:55,
+   bio:"The fastest god, and the most bored. Hermes agreed to fight you out of pure curiosity — nobody has ever made it this far. He moves so quickly he appears in three places at once.",
+   drops:[{name:"Hermes' Speed",icon:'🪶',desc:'Play 2 cards per turn permanently',effect:'double_play',atype:'passive'},
+          {name:'Divine Theft',icon:'💨',desc:'+5 souls on every lucky flip',effect:'divine_theft',atype:'passive'}]},
+  {name:'Demeter',sub:'Goddess of Harvest',av:'🌾',bhp:780,bsh:130,batk:48,divine:85,
+   bio:"Demeter fights with the weight of seasons — her strikes carry the cold of winter and the heat of drought. She does not want to fight you. But Zeus commanded it.",
+   drops:[{name:"Earth's Bounty",icon:'🌿',desc:'Automatically heal 8 HP each turn',effect:'earth_bounty',atype:'passive'},
+          {name:'Harvest Blade',icon:'🌾',desc:'+12 ATK permanently',effect:'harvest_blade',atype:'passive'}]},
+  {name:'Ares',sub:'God of War',av:'⚔️',bhp:880,bsh:70,batk:62,divine:65,
+   bio:"Ares has been waiting for someone worthy since the last great war. He laughed when he heard you defeated the Abyss. He is the only god who genuinely wants you to put up a fight.",
+   drops:[{name:"War's Hunger",icon:'⚔️',desc:'+8 ATK after every crit release',effect:'wars_hunger',atype:'passive'},
+          {name:'Berserker',icon:'🔥',desc:'Below 35% HP, deal 1.6x damage',effect:'berserker',atype:'passive'}]},
+  {name:'Poseidon',sub:'God of the Sea',av:'🔱',bhp:960,bsh:220,batk:55,divine:110,
+   bio:"Poseidon controls all water in the cosmos, including the water inside your body. He reminds you of this before the fight begins. His trident has never missed in three thousand years.",
+   drops:[{name:'Ocean Armor',icon:'🌊',desc:'Shield cards grant +50% more shield',effect:'ocean_armor',atype:'passive'},
+          {name:"Sea King's Wrath",icon:'🔱',desc:'[ACTIVE] 70 true damage once per battle',effect:'sea_wrath',atype:'active'}]},
+  {name:'Athena',sub:'Goddess of Wisdom',av:'🦉',bhp:1000,bsh:330,batk:50,divine:130,
+   bio:"Athena already knows how this fight ends. She has run 4,000 simulations. She is the only god who will tell you your mistakes after the battle, win or lose.",
+   drops:[{name:"Goddess's Wisdom",icon:'📜',desc:'Draw one extra card on lucky flips',effect:'extra_card',atype:'passive'},
+          {name:'Divine Counter',icon:'🛡️',desc:'[ACTIVE] Counter enemy for 45 true damage once',effect:'divine_counter',atype:'active'}]},
+  {name:'Apollo',sub:'God of the Sun',av:'☀️',bhp:1080,bsh:175,batk:58,divine:110,
+   bio:"Apollo heard a prophecy about you before you were born. He wrote a song about it. Now that you're here, he feels conflicted — he composed the ending as your defeat.",
+   drops:[{name:"Sun's Blessing",icon:'☀️',desc:'Heal +12 HP on every lucky flip',effect:'sun_blessing',atype:'passive'},
+          {name:'Solar Flare',icon:'🌟',desc:'[ACTIVE] 90 true damage once per battle',effect:'solar_flare',atype:'active'}]},
+  {name:'Zeus',sub:'King of Olympus',av:'⚡',bhp:1600,bsh:450,batk:78,divine:220,
+   bio:"Zeus does not understand how you got here. He built the cosmos. He set the rules. He decided mortals would stay mortal and souls would stay dead. And yet — here you stand. He is not angry. He is afraid. And that makes him more dangerous than anything you've faced.",
+   drops:[{name:"Thunder God",icon:'⚡',desc:'+28 ATK permanently',effect:'thunder_god',atype:'passive'},
+          {name:'Olympus Reborn',icon:'🏛️',desc:'[ACTIVE] Fully restore HP once per battle',effect:'olympus_reborn',atype:'active'}]},
+];
+
+const KRATOS={name:'Kratos',sub:'Ghost of Sparta',av:'🗡️',bhp:1800,bsh:280,batk:85,divine:0,
+  bio:"He wasn't supposed to be here. Kratos tore through the fabric between mythologies following a trail of divine blood. He has killed every god of Olympus in his own world. He looks at Zeus's defeat with something close to satisfaction. He does not want your soul — he just cannot let another pantheon stand unchallenged. His rage builds as you hurt him. When it peaks — run.",
+  special:'kratos',
+  drops:[{name:"God-Slayer's Mark",icon:'⚔️',desc:'+15 ATK and +60 max HP — strength of a god-killer',effect:'god_slayer',atype:'passive'},
+         {name:"Spartan Shield",icon:'🛡️',desc:'Start each battle with +40 shield and take -15% damage',effect:'spartan_shield',atype:'passive'}]};
+
+const EP3=[
+  {name:'Fenrir',sub:'The Great Wolf',av:'🐺',bhp:900,bsh:100,batk:60,
+   bio:"The wolf that will swallow the sun. Odin tried to chain him with a ribbon made of impossible things: the sound of a cat's footstep, the beard of a woman, the roots of a mountain. Fenrir bit off the god Tyr's hand to prove he was not afraid. He is not afraid of you either.",
+   drops:[{name:"Wolf's Instinct",icon:'🐺',desc:'15% chance to dodge enemy attacks',effect:'wolf_dodge',atype:'passive'},
+          {name:'Pack Leader',icon:'🌕',desc:'+5 ATK and +5 max shield per wave completed',effect:'pack_leader',atype:'passive'}]},
+  {name:'Jormungandr',sub:'The World Serpent',av:'🐍',bhp:1050,bsh:80,batk:68,
+   bio:"The serpent so large it wraps around the entire world and bites its own tail. When it lets go, Ragnarok begins. It opened one enormous eye when you entered Norse territory. It is assessing whether you are worth moving for.",
+   drops:[{name:'Venomfang',icon:'🐍',desc:'25% chance to poison enemy (15 dmg/turn 2 turns)',effect:'venomfang',atype:'passive'},
+          {name:'Serpent Scale',icon:'🛡️',desc:'+22 max shield and -20% incoming damage',effect:'serpent_scale',atype:'passive'}]},
+  {name:'Valkyrie',sub:'Chooser of the Slain',av:'⚔️',bhp:1150,bsh:250,batk:64,
+   bio:"She has chosen who lives and who dies in every battle since the first war. She has seen ten thousand final moments. Yours will be the ten thousand and first. She is not cruel — she is precise. Death, in her hands, is an art form.",
+   drops:[{name:"Death's Choice",icon:'⚔️',desc:'[ACTIVE] Remove all enemy shield instantly once',effect:'deaths_choice',atype:'active'},
+          {name:'Chosen One',icon:'🛡️',desc:'Revive twice instead of once with Undying (if you have it)',effect:'chosen_one',atype:'passive'}]},
+  {name:'Loki',sub:'God of Mischief',av:'🃏',bhp:1250,bsh:160,batk:70,
+   bio:"Loki is the most dangerous thing in any room — not because of strength, but because he has already seen every possible outcome and chosen the one that hurts you most. He is smiling. He has been smiling since before you arrived.",
+   drops:[{name:"Trickster's Eye",icon:'🃏',desc:'See all enemy abilities before they use them (log warnings)',effect:'trickster_eye',atype:'passive'},
+          {name:'Shapeshrifter',icon:'🦊',desc:'[ACTIVE] Fully restore shield AND poison enemy (15×2) once',effect:'shapeshifter',atype:'active'}]},
+  {name:'Thor',sub:'God of Thunder',av:'🔨',bhp:1400,bsh:200,batk:80,
+   bio:"Thor does not hate you. Thor respects you the way a hammer respects a nail — completely, and with its full weight. He threw Mjolnir across the cosmos once to kill a serpent. He will throw it at you and it will come back. It always comes back.",
+   drops:[{name:"Mjolnir's Legacy",icon:'🔨',desc:'+18 ATK and attacks have 20% stun chance',effect:'mjolnir_legacy',atype:'passive'},
+          {name:'Thunder God\'s Wrath',icon:'⚡',desc:'[ACTIVE] 3 hits of true damage (30 each) once per battle',effect:'thunder_wrath',atype:'active'}]},
+  {name:'Odin',sub:'The Allfather',av:'👁️',bhp:1600,bsh:380,batk:75,
+   bio:"Odin sacrificed his eye for wisdom. He hung on the world tree for nine days to learn the runes. He has died and come back. He has seen Ragnarok a thousand times. Every timeline where you win — he has already accounted for. Every timeline where you lose — he made happen.",
+   drops:[{name:"Allfather's Sight",icon:'👁️',desc:'10% chance attacks deal bonus dmg equal to 15% enemy max HP',effect:'allfather_sight',atype:'passive'},
+          {name:"Odin's Ravens",icon:'🦅',desc:'Draw one extra card on every flip (lucky or skull)',effect:'odins_ravens',atype:'passive'}]},
+  {name:'Hela',sub:'Goddess of Death',av:'💀',bhp:1900,bsh:420,batk:88,
+   bio:"Half her face is the face of a living woman. The other half is the face of a corpse. She rules Helheim — the realm where those who die of sickness and old age go, which is most people. She has been waiting for you specifically. She knew your name before you were born. She has a place prepared for you. She would prefer you fill it now.",
+   drops:[{name:"Hela's Crown",icon:'👑',desc:'+25 ATK, +80 max HP, +50 max shield — the power of death',effect:'hela_crown',atype:'passive'},
+          {name:'Death Goddess',icon:'💀',desc:'[ACTIVE] Deal damage equal to 20% of enemy CURRENT HP once',effect:'death_goddess',atype:'active'}]},
+];
+
+// ═══════ EQUIPMENT + SHOP + WHEEL + LEVELS ═══════
+const EQUIP_POOL=[
+  {id:'death_blade',icon:'🗡️',name:"Death's Blade",desc:'+14 ATK',apply(G){G.p.atk+=14;}},
+  {id:'bone_armor',icon:'🦴',name:'Bone Armor',desc:'+35 max HP, +25 max Shield',apply(G){G.p.maxHp+=35;G.p.maxShield+=25;G.p.hp=Math.min(G.p.hp+35,G.p.maxHp);}},
+  {id:'soul_veil',icon:'👻',name:'Soul Veil',desc:'+10 souls per lucky flip',bonus:'soul_veil'},
+  {id:'reaper_hood',icon:'🪬',name:"Reaper's Hood",desc:'Heal cards restore +12 extra HP',bonus:'heal_b',val:12},
+  {id:'iron_bulwark',icon:'🛡️',name:'Iron Bulwark',desc:'Shield cards grant +12 extra Shield',bonus:'sh_b',val:12},
+  {id:'void_gauntlet',icon:'🔮',name:'Void Gauntlet',desc:'True damage cards deal +18 more',bonus:'true_bonus',val:18},
+  {id:'death_crown',icon:'👑',name:"Death's Crown",desc:'+10 ATK and +25 max HP',apply(G){G.p.atk+=10;G.p.maxHp+=25;}},
+  {id:'luck_coin',icon:'🍀',name:'Lucky Coin',desc:'+18% Luck permanently',apply(G){G.p.luckBonus+=18;}},
+  {id:'olympus_relic',icon:'🏛️',name:'Olympus Relic',desc:'+20 ATK and +55 max HP',apply(G){G.p.atk+=20;G.p.maxHp+=55;}},
+  {id:'rune_stone',icon:'ᚱ',name:'Rune Stone',desc:'+12 ATK and +35 max HP (Norse)',apply(G){G.p.atk+=12;G.p.maxHp+=35;}},
+  {id:'ygg_bark',icon:'🌳',name:"Yggdrasil's Bark",desc:'Heal 5 HP per turn automatically',apply(G){G.yggRegen=5;}},
+];
+
+const SHOP_POOL=[
+  {name:'Soul Tonic',icon:'🧪',desc:'Restore 55 HP',cost:8,buy(G){G.p.hp=Math.min(G.p.hp+55,G.p.maxHp);}},
+  {name:'Iron Shell',icon:'🛡️',desc:'Gain 55 Shield',cost:9,buy(G){G.p.shield=Math.min(G.p.shield+55,G.p.maxShield);}},
+  {name:'Bone Shard',icon:'🦴',desc:'+8 ATK permanently',cost:14,buy(G){G.p.atk+=8;}},
+  {name:'Blood Vial',icon:'🩸',desc:'+28 max HP',cost:12,buy(G){G.p.maxHp+=28;G.p.hp=Math.min(G.p.hp+28,G.p.maxHp);}},
+  {name:'Void Crystal',icon:'🔮',desc:'+22 max Shield',cost:10,buy(G){G.p.maxShield+=22;}},
+  {name:'Lucky Charm',icon:'🍀',desc:'+10% Luck permanently',cost:15,buy(G){G.luckBonus+=10;}},
+  {name:'Full Restore',icon:'💎',desc:'Restore all HP & Shield',cost:22,buy(G){G.p.hp=G.p.maxHp;G.p.shield=G.p.maxShield;}},
+  {name:'Crit Shard',icon:'💥',desc:'Gain 3 stored crits',cost:10,buy(G){G.p.crits+=3;}},
+  {name:'Ambrosia Flask',icon:'🍇',desc:'Restore 65 HP now',cost:14,buy(G){G.p.hp=Math.min(G.p.hp+65,G.p.maxHp);}},
+  {name:'Antidote',icon:'💊',desc:'Clear all poison + cursed wound',cost:8,buy(G){G.poisonTurns=0;G.cursedWound=0;}},
+];
+
+const WHEEL_SEGS=[
+  {label:'+28 Souls',icon:'👻',color:'#0d2535',reward(G){G.p.souls+=28;return'+28 Souls!'}},
+  {label:'+38 Max HP',icon:'❤️',color:'#2d0d0d',reward(G){G.p.maxHp+=38;G.p.hp=Math.min(G.p.hp+38,G.p.maxHp);return'+38 Max HP!'}},
+  {label:'+10 ATK',icon:'⚔️',color:'#1a1005',reward(G){G.p.atk+=10;return'+10 ATK!'}},
+  {label:'+18 Souls',icon:'💙',color:'#0d1525',reward(G){G.p.souls+=18;return'+18 Souls'}},
+  {label:'Full Heal',icon:'💊',color:'#0d2015',reward(G){G.p.hp=G.p.maxHp;G.p.shield=G.p.maxShield;return'Full HP & Shield!'}},
+  {label:'Relic',icon:'⚙️',color:'#0d0d25',reward(G){const e=EQUIP_POOL[Math.floor(Math.random()*EQUIP_POOL.length)];giveEquip(G,e,true);return`Relic: ${e.name}!`}},
+  {label:'+45 Souls',icon:'✨',color:'#201505',reward(G){G.p.souls+=45;return'+45 Souls!'}},
+  {label:'Nothing',icon:'💨',color:'#0d0d0d',reward(){return'Empty Grave...'}},
+];
+
+const LV_REWARDS=[
+  {icon:'❤️',name:'Vital Soul',desc:'+35 Max HP',apply(G){G.p.maxHp+=35;G.p.hp=Math.min(G.p.hp+35,G.p.maxHp);}},
+  {icon:'⚔️',name:'Blade Sharpening',desc:'+7 ATK',apply(G){G.p.atk+=7;}},
+  {icon:'🛡️',name:'Fortified Shell',desc:'+30 Max Shield',apply(G){G.p.maxShield+=30;}},
+  {icon:'☀️',name:'Lucky Blessing',desc:'+10% Luck',apply(G){G.luckBonus+=10;}},
+  {icon:'💊',name:'Soul Vitality',desc:'+22 Max HP & heal',apply(G){G.p.maxHp+=22;G.p.hp=Math.min(G.p.hp+22,G.p.maxHp);}},
+  {icon:'💥',name:'Crit Mastery',desc:'Crit releases deal +35 extra damage',apply(G){G.critDmg+=5;}},
+];
+
+const MASTERY_OPT=[
+  {key:'atk',icon:'⚔️',name:'Attack Mastery',desc:'+8 dmg to attack & siphon cards',color:'#c42840'},
+  {key:'true',icon:'🔮',name:'Pierce Mastery',desc:'+10 to all true damage cards',color:'#ce93d8'},
+  {key:'heal',icon:'💊',name:'Healing Mastery',desc:'+12 HP to all healing cards',color:'#43a870'},
+  {key:'shield',icon:'🛡️',name:'Ward Mastery',desc:'+15 to all shield cards',color:'#78909c'},
+  {key:'crit',icon:'💥',name:'Crit Mastery',desc:'+8 bonus per crit stored on release',color:'#ffa726'},
+];
+
+// ═══════ STATE ═══════
+let G={};
+function initGame(){
+  G={
+    p:{hp:100,maxHp:100,shield:0,maxShield:70,atk:15,crits:0,souls:0,
+       passives:[],equipment:[],lv:1,exp:0,expNext:100,luckBonus:0},
+    e:null,wave:0,kills:0,phase:1,
+    luckBonus:0,critDmg:30,cardPower:0,
+    mastery:{atk:0,true:0,heal:0,shield:0,crit:0},
+    flipQueue:[],coinFlipped:false,turn:'idle',hand:[],
+    enemySkip:false,missNext:false,echoUsed:false,
+    petrified:false,divineReflect:false,ambrosiaTurns:0,fateCut:false,
+    usedUndying:false,titansWillUsed:false,equipChosen:false,masteryChosen:false,
+    eWarcry:0,eCounterMark:false,eSunMark:false,lokiDodge:false,forcedSkull:false,
+    kratosRage:0,
+    poisonTurns:0,poisonDmg:0,cursedWound:0,frozenAbil:0,noHealTurns:0,deathMark:0,
+    berserkerBlood:false,yggRegen:0,
+    pendingLU:null,shopItems:[],gameOver:false,wheelSpun:false,
+  };
+  spawnEnemy();renderAll();
+  log('☠ The coin thirsts. Flip to begin.','info');
+}
+
+// ═══════ HELPERS ═══════
+function hasP(G,e){return G.p.passives.some(p=>p.effect===e);}
+function eqB(G,key){let v=0;G.p.equipment.forEach(eq=>{if(eq.bonus===key)v+=(eq.val||10);});return v;}
+function cp(G,type){return G.cardPower+(G.mastery[type]||0);}
+function calcAtk(G){
+  let d=G.p.atk;
+  if(hasP(G,'colossus_crush'))d+=10;
+  if(hasP(G,'reapers_edge'))d=Math.floor(d*1.3);
+  if(hasP(G,'berserker')&&G.p.hp/G.p.maxHp<.35)d=Math.floor(d*1.6);
+  if(hasP(G,'splinter')&&Math.random()<.10){d=Math.floor(d*1.8);log('💢 Splinter proc!','good');}
+  if(hasP(G,'god_slayer'))d+=15;
+  if(hasP(G,'hela_crown'))d+=25;
+  if(hasP(G,'mjolnir_legacy'))d+=18;
+  return d;
+}
+function dealE(G,dmg,ignoreShield){
+  if(G.missNext){G.missNext=false;floatT('MISS!','e-card','#a1887f');log('❌ Attack missed!','skull-ev');return 0;}
+  if(G.lokiDodge){G.lokiDodge=false;let d=Math.floor(G.e.atk*.6);playerTakeDmg(G,d);floatT('DODGED!','e-card','#f06292');log(`🃏 Loki dodged and countered for ${d}!`,'bad');return 0;}
+  if(hasP(G,'mjolnir_legacy')&&Math.random()<.2){G.enemySkip=true;log('🔨 Mjolnir Legacy stun!','good');}
+  const e=G.e;
+  if(hasP(G,'allfather_sight')&&Math.random()<.1){let bonus=Math.floor(e.maxHp*.15);dmg+=bonus;log(`👁️ Allfather's Sight: +${bonus} bonus!`,'good');}
+  if(G.eCounterMark){G.eCounterMark=false;let ref=Math.floor(dmg*.3);G.p.hp=Math.max(1,G.p.hp-ref);log(`🦉 Athena counters: ${ref} reflected back!`,'bad');}
+  if(!ignoreShield&&e.shield>0){
+    let pct=hasP(G,'void_touch')?.75:1;
+    let sa=Math.floor(Math.min(e.shield,dmg*pct));e.shield=Math.max(0,e.shield-sa);
+    let rem=dmg-sa;if(rem>0)e.hp=Math.max(0,e.hp-rem);
+  }else e.hp=Math.max(0,e.hp-dmg);
+  if(hasP(G,'soul_drain')){G.p.souls+=2;floatT('+2👻','p-card','#81d4fa');}
+  if(hasP(G,'instant_death')&&Math.random()<.03){e.hp=0;log('🎯 INSTANT DEATH!','info');}
+  if(hasP(G,'venomfang')&&Math.random()<.25&&G.poisonTurns===0){G.poisonTurns=2;G.poisonDmg=15;log('🐍 Venomfang: Enemy poisoned!','good');}
+  // Kratos rage build
+  if(e.name==='Kratos'){G.kratosRage=Math.min(100,G.kratosRage+Math.floor(dmg*.25));updateRageBar();}
+  renderAll();return dmg;
+}
+function dealET(G,dmg){
+  if(G.missNext){G.missNext=false;floatT('MISS!','e-card','#a1887f');return 0;}
+  if(G.lokiDodge){G.lokiDodge=false;let d=Math.floor(G.e.atk*.6);playerTakeDmg(G,d);floatT('DODGED!','e-card','#f06292');return 0;}
+  G.e.hp=Math.max(0,G.e.hp-dmg);
+  if(hasP(G,'soul_drain'))G.p.souls+=2;
+  if(G.e.name==='Kratos'){G.kratosRage=Math.min(100,G.kratosRage+Math.floor(dmg*.2));updateRageBar();}
+  renderAll();return dmg;
+}
+// Reverse true damage (god ability hits player past shield)
+function dealEnemyTrue_reverse(G,d){
+  G.p.hp=Math.max(0,G.p.hp-d);
+  flash('p-card','red');
+}
+function playerTakeDmg(G,dmg){
+  if(G.eSunMark){G.eSunMark=false;dmg=Math.floor(dmg*1.25);log('☀️ Sun Mark: +25% damage taken!','bad');}
+  if(G.deathMark>0){G.deathMark--;dmg=Math.floor(dmg*1.35);log('💀 Death Mark: +35% damage!','bad');}
+  if(G.eWarcry>0){G.eWarcry--;dmg=Math.floor(dmg*1.5);}
+  if(hasP(G,'spartan_shield'))dmg=Math.floor(dmg*.85);
+  if(hasP(G,'serpent_scale'))dmg=Math.floor(dmg*.8);
+  if(G.divineReflect){let ref=Math.floor(dmg*.2);G.e.hp=Math.max(0,G.e.hp-ref);G.divineReflect=false;log(`🛡️ Reflect: ${ref} bounced back!`,'good');}
+  if(G.p.shield>0){let a=Math.min(G.p.shield,dmg);G.p.shield-=a;dmg-=a;}
+  if(dmg>0){
+    if(hasP(G,'titans_will')&&!G.titansWillUsed&&G.p.hp-dmg<=0){G.titansWillUsed=true;G.p.hp=15;log("🗿 Titan's Will: Death denied! (spent)",'info');return;}
+    G.p.hp=Math.max(0,G.p.hp-dmg);
+  }
+  flash('p-card','red');floatT(`-${dmg}`,'p-card','#ef5350');
+}
+function gainExp(n){
+  G.p.exp+=n;
+  if(G.p.exp>=G.p.expNext){G.p.exp-=G.p.expNext;G.p.lv++;G.p.expNext=Math.floor(G.p.expNext*1.5);
+    const r=LV_REWARDS[(G.p.lv-2)%LV_REWARDS.length];G.pendingLU=r;setTimeout(()=>showLevelUp(r),500);}
+}
+function giveEquip(G,eq,silent=false){
+  G.p.equipment.push(eq);if(eq.apply)eq.apply(G);if(eq.id==='ygg_bark')G.yggRegen=5;
+  if(!silent)log(`⚙️ Equipped: ${eq.name}`,'info');renderAll();
+}
+function updateRageBar(){
+  const rw=document.getElementById('rage-bar-wrap');
+  if(G.e&&G.e.name==='Kratos'){rw.style.display='block';document.getElementById('rage-t').textContent=`${Math.floor(G.kratosRage)}/100`;document.getElementById('rage-b').style.width=G.kratosRage+'%';}
+  else rw.style.display='none';
+}
+function applyDoT(){
+  // Poison
+  if(G.poisonTurns>0){G.poisonTurns--;G.p.hp=Math.max(1,G.p.hp-G.poisonDmg);floatT(`-${G.poisonDmg}🐍`,'p-card','#4caf50');flash('p-card','poison');log(`🐍 Poison: -${G.poisonDmg} HP (${G.poisonTurns} turns left)`,'poison');}
+  // Cursed wound
+  if(G.cursedWound>0){G.cursedWound--;G.p.hp=Math.max(1,G.p.hp-10);floatT(`-10🩹`,'p-card','#ef5350');log(`🩹 Cursed Wound: -10 HP (${G.cursedWound} left)`,'skull-ev');}
+  // Frozen decrement
+  if(G.frozenAbil>0)G.frozenAbil--;
+  // No heal decrement
+  if(G.noHealTurns>0)G.noHealTurns--;
+  // Ygg regen
+  if(G.yggRegen>0){G.p.hp=Math.min(G.p.hp+G.yggRegen,G.p.maxHp);log(`🌳 Yggdrasil regen: +${G.yggRegen} HP`,'good');}
+  // Earth bounty
+  if(hasP(G,'earth_bounty')){G.p.hp=Math.min(G.p.hp+8,G.p.maxHp);log('🌿 Earth Bounty: +8 HP','good');}
+  // Sun blessing
+  if(hasP(G,'sun_blessing'))G.p.hp=Math.min(G.p.hp+12,G.p.maxHp);
+  // Ambrosia
+  if(G.ambrosiaTurns>0){G.ambrosiaTurns--;G.p.hp=Math.min(G.p.hp+20,G.p.maxHp);G.p.shield=Math.min(G.p.shield+20,G.p.maxShield);log('🍇 Ambrosia: +20 HP +20 Shield','good');}
+}
+
+// ═══════ SPAWN ═══════
+function spawnEnemy(){
+  let base,scaleFactor;
+  if(G.phase===1){base=EP1[Math.min(G.wave,EP1.length-1)];scaleFactor=1+G.wave*.15;}
+  else if(G.wave===14){base=KRATOS;scaleFactor=1;}
+  else if(G.phase===2){base=EP2[Math.min(G.wave-7,EP2.length-1)];scaleFactor=1+(G.wave-7)*.14;}
+  else{base=EP3[Math.min(G.wave-15,EP3.length-1)];scaleFactor=1+(G.wave-15)*.12;}
+
+  G.e={...base,
+    hp:Math.floor(base.bhp*scaleFactor),maxHp:Math.floor(base.bhp*scaleFactor),
+    shield:Math.floor(base.bsh*scaleFactor),maxShield:Math.floor(base.bsh*scaleFactor)+50,
+    atk:Math.floor(base.batk*scaleFactor),
+    divine:base.divine?Math.floor(base.divine*scaleFactor):0,
+    maxDivine:base.divine?Math.floor(base.divine*scaleFactor)+20:0,
+  };
+  G.titansWillUsed=false;G.usedUndying=false;G.kratosRage=0;G.lokiDodge=false;
+  G.eWarcry=0;G.eCounterMark=false;G.eSunMark=false;G.berserkerBlood=false;
+  G.cardPower=G.wave*4;
+  generateShop();
+  if(hasP(G,'iron_bones'))G.p.shield=Math.min(G.p.shield+20,G.p.maxShield);
+  if(G.fateCut){G.p.maxHp=Math.min(Math.floor(G.p.maxHp/.55)+20,700);G.fateCut=false;}
+  // Pack leader bonus per wave
+  if(hasP(G,'pack_leader')){G.p.atk+=5;G.p.maxShield+=5;}
+
+  document.getElementById('wave-power').textContent=`Card Power +${G.cardPower}`;
+  document.getElementById('enemy-num').textContent=`Enemy ${G.wave+1} · Wave ${G.wave+1}`;
+  const phaseLabel=G.phase===3?'Norse':G.phase===2?'Olympus':'Underworld';
+  log(`${G.phase===3?'🔨':G.phase===2?'⚡':'💀'} ${G.e.name} appears! HP:${G.e.hp} | ATK:${G.e.atk} [${phaseLabel}]`,'info');
+  if(G.wave>0)log(`📈 Card Power +${G.cardPower} — your cards are stronger.`,'soul');
+  updateRageBar();renderAll();
+}
+
+// ═══════ PHASE TRANSITIONS ═══════
+function triggerOlympusTransition(){
+  const el=document.getElementById('olympus-trans');
+  document.getElementById('game-screen').classList.remove('active');
+  el.classList.add('active');
+  document.body.classList.add('olympus');
+  document.getElementById('phase-badge').textContent='OLYMPUS';
+  document.getElementById('phase-badge').className='phase-badge pb-p2';
+  document.getElementById('coin2-wrap').style.display='block';
+  document.getElementById('flip-btn').textContent='Flip 2 Coins';
+  // Reset luck bonus — player must rebuild it
+  G.luckBonus=0;
+  setTimeout(()=>{
+    el.classList.remove('active');
+    G.phase=2;G.wave=7;
+    document.getElementById('game-screen').classList.add('active');
+    spawnEnemy();endEnemyTurn();
+    log('⚡ OLYMPUS PHASE! Two coins now. Your luck has been reset.','divine');
+  },5000);
+}
+
+function triggerNorseTransition(){
+  const el=document.getElementById('norse-trans');
+  document.getElementById('game-screen').classList.remove('active');
+  el.classList.add('active');
+  document.body.classList.remove('olympus');document.body.classList.add('norse');
+  document.getElementById('phase-badge').textContent='RAGNAROK';
+  document.getElementById('phase-badge').className='phase-badge pb-p3';
+  G.luckBonus=0;
+  setTimeout(()=>{
+    el.classList.remove('active');
+    G.phase=3;G.wave=15;
+    document.getElementById('game-screen').classList.add('active');
+    spawnEnemy();endEnemyTurn();
+    log('🔨 RAGNAROK BEGINS. Two coins. Luck reset. No mercy.','norse');
+  },5500);
+}
+
+// ═══════ COIN FLIP ═══════
+function flipCoin(){
+  if(G.gameOver||G.coinFlipped||G.turn==='enemy')return;
+  if(G.petrified){G.petrified=false;log('🐍 Petrification wears off — turn skipped!','skull-ev');G.coinFlipped=true;setTimeout(enemyTurn,600);return;}
+  document.getElementById('flip-btn').disabled=true;
+  G.coinFlipped=true;
+
+  const luckPct=50+(G.luckBonus||0)+(G.p.luckBonus||0);
+  let r1,r2;
+
+  if(G.forcedSkull){r1='skull';G.forcedSkull=false;log('☀️ Your flip was forced SKULL by prophecy!','skull-ev');}
+  else r1=Math.random()*100<luckPct?'luck':'skull';
+
+  if(G.phase>1){
+    r2=Math.random()*100<luckPct?'luck':'skull';
+  }
+
+  // Animate
+  const c1=document.getElementById('coin1');
+  c1.classList.add('flipping');
+  if(G.phase>1){
+    const c2=document.getElementById('coin2');
+    c2.classList.add('flipping2');
+  }
+
+  setTimeout(()=>{
+    c1.classList.remove('flipping');
+    if(G.phase>1)document.getElementById('coin2').classList.remove('flipping2');
+
+    // Build queue
+    G.flipQueue=G.phase>1?[r1,r2]:[r1];
+    // Souls from luck flips
+    G.flipQueue.forEach(r=>{
+      if(r==='luck'){
+        let sc=5+G.wave*2;
+        if(G.p.equipment.find(e=>e.bonus==='soul_veil'))sc+=10;
+        if(hasP(G,'divine_theft'))sc+=5;
+        G.p.souls+=sc;
+      }
+    });
+
+    // Show result
+    const resEl=document.getElementById('coin-res');
+    if(G.phase>1){
+      const both=[r1,r2];
+      if(both.every(x=>x==='luck')){resEl.textContent='✦ LUCK ✦ LUCK ✦';resEl.className='coin-res luck';}
+      else if(both.every(x=>x==='skull')){resEl.textContent='💀 SKULL ✦ SKULL 💀';resEl.className='coin-res skull';}
+      else{resEl.textContent='☀️ LUCK ✦ SKULL 💀';resEl.className='coin-res mixed';}
+    }else{
+      resEl.textContent=r1==='luck'?'✦ LUCK ✦':'💀 CURSED 💀';
+      resEl.className='coin-res '+r1;
+    }
+    applyDoT();
+    processFlipQueue();
+    renderAll();
+  },1150);
+}
+
+function processFlipQueue(){
+  const qi=document.getElementById('queue-ind');
+  if(G.flipQueue.length===0){
+    qi.textContent='';qi.className='queue-ind';
+    G.turn='enemy';setTurn('et');setTimeout(enemyTurn,700);return;
+  }
+  const next=G.flipQueue.shift();
+  const remaining=G.flipQueue.length;
+  if(remaining>0)qi.textContent=`(${remaining} more to resolve)`;
+  else{qi.textContent='';qi.className='queue-ind';}
+  if(next==='luck'){G.turn='player';drawLuckHand();setTurn('pt');}
+  else{G.turn='skull';drawSkullHand();setTurn('sk');}
+}
+
+// ═══════ HANDS ═══════
+function drawLuckHand(){
+  const pool=G.phase===3?LUCK_P3:G.phase===2?LUCK_P2:LUCK_P1;
+  const isUltra=Math.random()<.02;
+  const base=pool.filter(c=>c.id!=='ultra');
+  let drawn=isUltra?[pool.find(c=>c.id==='ultra')]:[...Array(4)].map(()=>wPick(base));
+  G.hand=drawn;renderHand('luck');
+  const ht=document.getElementById('hand-title');
+  ht.className='hand-title';
+  ht.innerHTML=`${G.phase===3?'🔨':G.phase===2?'⚡':'☀️'} ${G.phase===3?'Norse':'Luck'} Hand — <span>Choose a card</span>`;
+}
+function drawSkullHand(){
+  const pool=G.phase===3?SKULL_P3:G.phase===2?SKULL_P2:SKULL_P1;
+  let drawn=[...Array(3)].map(()=>wPick(pool));
+  G.hand=drawn;renderHand('skull');
+  const ht=document.getElementById('hand-title');
+  ht.className='hand-title skull-t';
+  ht.innerHTML=`💀 ${G.phase===3?'Fate':'Skull'} Hand — <span>Choose your punishment</span>`;
+}
+function wPick(pool){
+  const t=pool.reduce((a,c)=>a+(c.w||10),0);
+  let r=Math.random()*t;for(const c of pool){r-=(c.w||10);if(r<=0)return{...c};}
+  return{...pool[0]};
+}
+
+// ═══════ PLAY CARD ═══════
+function playCard(idx){
+  const card=G.hand[idx];if(!card)return;
+  if(G.turn!=='player'&&G.turn!=='skull')return;
+  const result=card.play(G);
+  if(result)log(result.msg,result.t||'neutral');
+  G.hand=[];disableCards();
+  if(G.e&&G.e.hp<=0){enemyDied();return;}
+  // Check death after skull (e.g. self-wound)
+  if(G.p.hp<=0){
+    if(hasP(G,'undying')&&!G.usedUndying){G.usedUndying=true;G.p.hp=40;log('♾️ UNDYING: Revived at 40 HP!','info');}
+    else{gameOver();return;}
+  }
+  setTimeout(()=>{processFlipQueue();renderAll();},320);
+  renderAll();
+}
+
+// ═══════ ENEMY TURN ═══════
+function enemyTurn(){
+  if(G.gameOver)return;
+  const e=G.e,p=G.p;
+  if(G.enemySkip){G.enemySkip=false;log(`😴 ${e.name} stunned — skipped!`,'good');endEnemyTurn();return;}
+
+  // Kratos rage check — prioritize rage over ability
+  if(e.name==='Kratos'&&G.kratosRage>=100){
+    const rageAb=GOD_AB['Kratos'].find(a=>a.name==='Spartan Rage');
+    rageAb.fn(G);
+  }
+  // God/monster abilities
+  else if(GOD_AB[e.name]&&Math.random()<.38){
+    const abs=GOD_AB[e.name];
+    const ab=abs[Math.floor(Math.random()*abs.length)];
+    ab.fn(G);
+  }
+  // Normal attack
+  else{
+    // Sometimes gods fortify shield
+    if(e.shield<e.maxShield*.2&&Math.random()<.22){
+      let sg=Math.floor(12+G.wave*3);e.shield=Math.min(e.shield+sg,e.maxShield);
+      log(`🛡 ${e.name} fortifies! +${sg} shield`,'bad');
+    }else if(e.divine>0&&Math.random()<.28){
+      let h=Math.floor(e.divine*.12);e.hp=Math.min(e.hp+h,e.maxHp);e.divine=Math.max(0,e.divine-18);
+      log(`✦ ${e.name} channels divine! +${h} HP`,'bad');
+    }else{
+      let dmg=e.atk+Math.floor(Math.random()*8);
+      // Echo step
+      if(hasP(G,'echo_step')&&!G.echoUsed){G.echoUsed=true;G.p.passives=G.p.passives.filter(p=>p.effect!=='echo_step');floatT('DODGE!','p-card','#c9a84c');log('👣 Echo Step: Dodged! (consumed)','good');}
+      // Wolf dodge
+      else if(hasP(G,'wolf_dodge')&&Math.random()<.15){floatT('DODGE!','p-card','#c9a84c');log('🐺 Wolf instinct dodge!','good');}
+      else playerTakeDmg(G,dmg);
+      if(G.p.hp>0)log(`${G.phase===3?'🔨':G.phase===2?'⚡':'💢'} ${e.name}: You take damage`,'bad');
+    }
+  }
+
+  if(G.p.hp<=0){
+    if(hasP(G,'undying')&&!G.usedUndying){G.usedUndying=true;G.p.hp=40;log('♾️ UNDYING: Revived!','info');}
+    else{gameOver();return;}
+  }
+  renderAll();endEnemyTurn();
+}
+
+function endEnemyTurn(){
+  G.coinFlipped=false;G.turn='idle';G.hand=[];G.flipQueue=[];
+  renderHand('idle');
+  document.getElementById('flip-btn').disabled=false;
+  document.getElementById('coin-res').textContent='— FLIP —';document.getElementById('coin-res').className='coin-res';
+  document.getElementById('queue-ind').textContent='';
+  const ht=document.getElementById('hand-title');ht.className='hand-title';ht.innerHTML='Hand — <span id="hand-status">Flip the coin</span>';
+  setTurn('idle');
+}
+
+// ═══════ ENEMY DEATH ═══════
+function enemyDied(){
+  const e=G.e;G.kills++;
+  const sc=18+G.wave*14;G.p.souls+=sc;gainExp(80+G.wave*35);
+  log(`☠️ ${e.name} slain! +${sc} souls`,'info');flash('e-card','red');
+  G.coinFlipped=false;G.turn='idle';G.hand=[];G.flipQueue=[];renderHand('idle');
+  document.getElementById('flip-btn').disabled=false;
+  setTimeout(()=>showAbilDrop(e.drops),420);
+}
+
+function showAbilDrop(drops){
+  const ol=document.getElementById('abil-overlay');
+  document.getElementById('abil-title').textContent=G.phase===3?'🔨 Norse Power':G.phase===2?'⚡ Divine Power':'⚔ Ability Drop';
+  const cont=document.getElementById('abil-choices');cont.innerHTML='';
+  drops.forEach(drop=>{
+    const el=document.createElement('div');el.className='abil-card';
+    el.innerHTML=`<span class="abil-icon">${drop.icon}</span><div class="abil-name">${drop.name}</div><div class="abil-desc">${drop.desc}</div><span class="abil-type ${drop.atype}">${drop.atype==='active'?'⚡ Active':'✦ Passive'}</span>`;
+    el.onclick=()=>{
+      G.p.passives.push({...drop,used:false});
+      log(`✦ Gained: ${drop.name}`,'info');
+      ol.classList.remove('active');
+      applyPassiveImmediate(drop.effect);
+      // Phase transitions
+      if(G.phase===1&&G.wave===6){triggerOlympusTransition();}
+      else if(G.phase===2&&G.wave===13){triggerOlympusToKratos();}
+      else if(G.wave===14){triggerNorseTransition();}
+      else{G.wave++;showVictoryScreen();}
+    };
+    cont.appendChild(el);
+  });
+  ol.classList.add('active');
+}
+
+function applyPassiveImmediate(eff){
+  if(eff==='void_ascension'){G.p.atk+=20;G.p.maxHp+=40;}
+  if(eff==='thunder_god'){G.p.atk+=28;}
+  if(eff==='harvest_blade'){G.p.atk+=12;}
+  if(eff==='god_slayer'){G.p.atk+=15;G.p.maxHp+=60;}
+  if(eff==='hela_crown'){G.p.atk+=25;G.p.maxHp+=80;G.p.maxShield+=50;}
+  if(eff==='mjolnir_legacy'){G.p.atk+=18;}
+}
+
+function triggerOlympusToKratos(){
+  // Kratos enters after Zeus — still in Olympus phase for now
+  G.wave=14;showVictoryScreen();
+}
+
+// ═══════ ACTIVE PASSIVES ═══════
+function useActivePassive(idx){
+  const pass=G.p.passives[idx];if(!pass||pass.atype!=='active'||pass.used)return;
+  if(G.frozenAbil>0){log(`🧊 Active abilities are frozen for ${G.frozenAbil} more turns!`,'skull-ev');return;}
+  switch(pass.effect){
+    case'sea_wrath':dealET(G,70);floatT('-70🔱','e-card','#4fc3f7');flash('e-card','blue');log('🔱 Sea Wrath: 70 true damage!','divine');break;
+    case'divine_counter':dealET(G,45);floatT('-45🛡','e-card','#9fa8da');log('🛡️ Divine Counter: 45 true!','divine');break;
+    case'solar_flare':dealET(G,90);floatT('-90☀','e-card','#fff0a0');flash('e-card','gold');log('🌟 Solar Flare: 90 true!','divine');break;
+    case'olympus_reborn':G.p.hp=G.p.maxHp;floatT('REBORN','p-card','#fff0a0');flash('p-card','gold');log('🏛️ Olympus Reborn: Full HP!','divine');break;
+    case'deaths_choice':G.e.shield=0;floatT('JUDGED','e-card','#f48fb1');log("⚔️ Death's Choice: All enemy shield removed!",'norse');break;
+    case'shapeshifter':G.p.shield=G.p.maxShield;if(G.poisonTurns===0){G.e.hp=Math.max(0,G.e.hp-30);G.e.poisonMock=true;}log('🦊 Shapeshifter: Shield restored + enemy poisoned!','norse');break;
+    case'thunder_wrath':{let d=30;for(let i=0;i<3;i++)dealET(G,d);floatT('-90⚡','e-card','#ffd700');log('⚡ Thunder Wrath: 3×30 true damage!','norse');break;}
+    case'death_goddess':{let d=Math.floor(G.e.hp*.2);dealET(G,d);floatT(`-${d}💀`,'e-card','#9c27b0');log(`💀 Death Goddess: ${d} (20% of current HP)!`,'norse');break;}
+  }
+  pass.used=true;
+  if(G.e&&G.e.hp<=0){enemyDied();return;}
+  renderAll();
+}
+
+// ═══════ VICTORY ═══════
+function showVictoryScreen(){
+  document.getElementById('game-screen').classList.remove('active');
+  document.getElementById('victory-screen').classList.add('active');
+  document.getElementById('continue-btn').style.display='none';
+  document.getElementById('v-sub').textContent=`Wave ${G.wave} cleared.`;
+  G.equipChosen=false;G.masteryChosen=false;G.wheelSpun=false;
+  document.getElementById('equip-opt').classList.remove('disabled-opt');
+  document.getElementById('mastery-opt').classList.remove('disabled-opt');
+}
+function markVictoryChosen(){document.getElementById('continue-btn').style.display='block';}
+function continueToNext(){
+  document.getElementById('victory-screen').classList.remove('active');
+  document.getElementById('game-screen').classList.add('active');
+  spawnEnemy();endEnemyTurn();
+}
+
+function openEquipment(){
+  if(G.equipChosen)return;
+  const pool=G.phase===3?EQUIP_POOL:[...EQUIP_POOL].filter(e=>e.id!=='rune_stone'&&e.id!=='ygg_bark');
+  const chosen=[...pool].sort(()=>Math.random()-.5).slice(0,4);
+  const grid=document.getElementById('eq-grid');grid.innerHTML='';
+  chosen.forEach(eq=>{
+    const el=document.createElement('div');el.className='eq-card';
+    el.innerHTML=`<div class="eq-icon">${eq.icon}</div><div class="eq-name">${eq.name}</div><div class="eq-desc">${eq.desc}</div>`;
+    el.onclick=()=>{giveEquip(G,eq);G.equipChosen=true;document.getElementById('equip-opt').classList.add('disabled-opt');document.getElementById('equip-overlay').classList.remove('active');markVictoryChosen();};
+    grid.appendChild(el);
+  });
+  document.getElementById('equip-overlay').classList.add('active');
+}
+function closeEquip(){document.getElementById('equip-overlay').classList.remove('active');markVictoryChosen();}
+
+function openMastery(){
+  if(G.masteryChosen)return;
+  const grid=document.getElementById('mastery-grid');grid.innerHTML='';
+  MASTERY_OPT.forEach(opt=>{
+    const cur=G.mastery[opt.key]||0;
+    const el=document.createElement('div');el.className='mastery-card';
+    el.innerHTML=`<div class="mastery-icon">${opt.icon}</div><div class="mastery-name">${opt.name}</div><div class="mastery-desc">${opt.desc}</div><div class="mastery-current" style="color:${opt.color}">Current: +${cur}</div>`;
+    el.onclick=()=>{
+      G.mastery[opt.key]=(G.mastery[opt.key]||0)+(opt.key==='atk'?8:opt.key==='true'?10:opt.key==='heal'?12:opt.key==='shield'?15:8);
+      log(`📈 ${opt.name}: Now +${G.mastery[opt.key]}`,'soul');
+      G.masteryChosen=true;document.getElementById('mastery-opt').classList.add('disabled-opt');
+      document.getElementById('mastery-overlay').classList.remove('active');markVictoryChosen();renderAll();
+    };
+    grid.appendChild(el);
+  });
+  document.getElementById('mastery-overlay').classList.add('active');
+}
+function closeMastery(){document.getElementById('mastery-overlay').classList.remove('active');markVictoryChosen();}
+
+function openVShop(){openShop(true);}
+function openShop(fromV=false){
+  document.getElementById('shop-soul-cnt').textContent=G.p.souls;
+  const grid=document.getElementById('shop-grid');grid.innerHTML='';
+  G.shopItems.forEach((item,i)=>{
+    const can=G.p.souls>=item.cost;
+    const el=document.createElement('div');el.className=`shop-item${can?'':' cant-afford'}`;
+    el.innerHTML=`<div class="item-name">${item.icon} ${item.name}</div><div class="item-desc">${item.desc}</div><div class="item-cost">👻 ${item.cost}</div>`;
+    if(can)el.onclick=()=>{G.p.souls-=item.cost;item.buy(G);G.shopItems.splice(i,1);log(`🛒 Bought: ${item.name}`,'soul');
+      if(fromV){document.getElementById('shop-overlay').classList.remove('active');markVictoryChosen();}
+      else{closeShop();openShop();}renderAll();};
+    grid.appendChild(el);
+  });
+  document.getElementById('shop-overlay').classList.add('active');
+  const cb=document.getElementById('shop-close-btn');
+  cb.onclick=fromV?()=>{closeShop();markVictoryChosen();}:closeShop;
+}
+function closeShop(){document.getElementById('shop-overlay').classList.remove('active');}
+function generateShop(){G.shopItems=[...SHOP_POOL].sort(()=>Math.random()-.5).slice(0,4);}
+
+// Wheel
+let wRot=0;
+function openWheel(){
+  document.getElementById('wheel-overlay').classList.add('active');
+  document.getElementById('spin-btn').disabled=G.wheelSpun;
+  document.getElementById('wheel-result').textContent='';
+  document.getElementById('wheel-close-btn').style.display=G.wheelSpun?'block':'none';
+  drawWheel(0);
+}
+function closeWheel(){document.getElementById('wheel-overlay').classList.remove('active');if(G.wheelSpun)markVictoryChosen();}
+function drawWheel(rot){
+  const c=document.getElementById('spin-wheel'),ctx=c.getContext('2d');
+  const cx=125,cy=125,r=120,n=WHEEL_SEGS.length,arc=(Math.PI*2)/n;
+  ctx.clearRect(0,0,250,250);
+  WHEEL_SEGS.forEach((seg,i)=>{
+    const s=arc*i+(rot*(Math.PI/180)),e=s+arc;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,s,e);ctx.closePath();
+    ctx.fillStyle=seg.color;ctx.fill();ctx.strokeStyle='rgba(255,255,255,.06)';ctx.lineWidth=1;ctx.stroke();
+    ctx.save();ctx.translate(cx,cy);ctx.rotate(s+arc/2);ctx.textAlign='right';
+    ctx.fillStyle='rgba(255,255,255,.75)';ctx.font='bold 9px Crimson Text';
+    ctx.fillText(seg.icon+' '+seg.label,r-5,4);ctx.restore();
+  });
+}
+function spinWheel(){
+  if(G.wheelSpun)return;G.wheelSpun=true;document.getElementById('spin-btn').disabled=true;
+  const tSeg=Math.floor(Math.random()*WHEEL_SEGS.length);
+  const segA=360/WHEEL_SEGS.length;
+  const addRot=5*360+(segA*(WHEEL_SEGS.length-tSeg)-(segA/2));
+  const startRot=wRot;wRot=(wRot+addRot)%360;
+  let start=null,dur=4000;
+  function anim(ts){if(!start)start=ts;const p=Math.min((ts-start)/dur,1);const ease=1-Math.pow(1-p,4);
+    drawWheel(startRot+addRot*ease);
+    if(p<1)requestAnimationFrame(anim);
+    else{const seg=WHEEL_SEGS[tSeg];const res=seg.reward(G);
+      document.getElementById('wheel-result').textContent='✦ '+res+' ✦';
+      log(`🎰 Wheel: ${res}`,'soul');document.getElementById('wheel-close-btn').style.display='block';renderAll();}}
+  requestAnimationFrame(anim);
+}
+
+function showLevelUp(r){
+  document.getElementById('lu-sub').textContent=`Level ${G.p.lv}!`;
+  document.getElementById('lu-reward').innerHTML=`<div class="lu-icon">${r.icon}</div><div class="lu-name">${r.name}</div><div class="lu-desc">${r.desc}</div>`;
+  document.getElementById('levelup-overlay').classList.add('active');
+}
+function acceptLevelUp(){
+  if(G.pendingLU){G.pendingLU.apply(G);log(`✨ Level ${G.p.lv}: ${G.pendingLU.name}`,'info');G.pendingLU=null;}
+  document.getElementById('levelup-overlay').classList.remove('active');renderAll();
+}
+
+function openBio(){
+  if(!G.e)return;
+  const e=G.e;
+  document.getElementById('bio-title').textContent=`📖 ${e.name}`;
+  document.getElementById('bio-avatar').textContent=e.av;
+  document.getElementById('bio-lore').textContent=e.bio||'No records survive.';
+  document.getElementById('bio-stats').innerHTML=`
+    <div class="bio-stat">❤ HP <span>${e.maxHp}</span></div>
+    <div class="bio-stat">🛡 Shield <span>${e.maxShield-50}</span></div>
+    <div class="bio-stat">⚔ ATK <span>${e.atk}</span></div>
+    ${e.divine>0?`<div class="bio-stat">✦ Divine <span>${e.divine}</span></div>`:''}
+    <div class="bio-stat">Wave <span>${G.wave+1}</span></div>
+  `;
+  document.getElementById('bio-overlay').classList.add('active');
+}
+
+function gameOver(){
+  G.gameOver=true;
+  const pname=G.phase===3?'Ragnarok':G.phase===2?'Olympus':'Underworld';
+  document.getElementById('go-phase').textContent=pname;
+  document.getElementById('go-kills').textContent=G.kills;
+  document.getElementById('go-lv').textContent=G.p.lv;
+  document.getElementById('go-souls').textContent=G.p.souls;
+  document.getElementById('go-pass').textContent=G.p.passives.length;
+  document.getElementById('go-sub').textContent=G.phase===3?'Not even the gods of Valhalla could save you.':G.phase===2?'Olympus stands.':'Your flame has been extinguished.';
+  document.getElementById('game-screen').classList.remove('active');
+  document.getElementById('gameover-screen').classList.add('active');
+}
+
+// ═══════ RENDER ═══════
+function renderAll(){
+  const p=G.p,e=G.e;
+  document.getElementById('t-souls').textContent=p.souls;
+  document.getElementById('t-lv').textContent=p.lv;
+  document.getElementById('t-hp').textContent=p.hp;
+  document.getElementById('t-maxhp').textContent=p.maxHp;
+  document.getElementById('t-atk').textContent=p.atk;
+  document.getElementById('php-t').textContent=`${p.hp}/${p.maxHp}`;
+  document.getElementById('php-b').style.width=Math.max(0,(p.hp/p.maxHp)*100)+'%';
+  document.getElementById('psh-t').textContent=p.shield;
+  document.getElementById('psh-b').style.width=Math.max(0,(p.shield/p.maxShield)*100)+'%';
+  document.getElementById('patk-v').textContent=p.atk;
+  document.getElementById('psh-v').textContent=p.shield;
+  document.getElementById('pcr-v').textContent=p.crits;
+
+  if(e){
+    document.getElementById('e-avatar').textContent=e.av;
+    document.getElementById('e-name').textContent=e.name;
+    document.getElementById('e-sub').textContent=e.sub;
+    document.getElementById('ehp-t').textContent=`${Math.max(0,e.hp)}/${e.maxHp}`;
+    document.getElementById('ehp-b').style.width=Math.max(0,(e.hp/e.maxHp)*100)+'%';
+    document.getElementById('esh-t').textContent=Math.max(0,e.shield);
+    document.getElementById('esh-b').style.width=Math.max(0,(e.shield/(e.maxShield||1))*100)+'%';
+    document.getElementById('eatk-v').textContent=e.atk;
+    const ds=document.getElementById('e-divine-stat');
+    if(e.divine>0){ds.style.display='flex';document.getElementById('ediv-v').textContent=e.divine;}
+    else ds.style.display='none';
+  }
+
+  // Passives
+  const pp=document.getElementById('p-passives');pp.innerHTML='';
+  p.passives.forEach((pass,i)=>{
+    const frozen=G.frozenAbil>0&&pass.atype==='active';
+    const tag=document.createElement('span');
+    if(pass.atype==='active'){
+      tag.className=`p-tag active-ab${(pass.used||frozen)?' used-ab':''}`;
+      tag.title=`[ACTIVE] ${pass.desc}${frozen?' (FROZEN)':''}`;
+      tag.textContent=`${pass.icon} ${pass.name}`;
+      if(!pass.used&&!frozen)tag.onclick=()=>useActivePassive(i);
+    }else{tag.className='p-tag passive';tag.title=pass.desc;tag.textContent=`${pass.icon} ${pass.name}`;}
+    pp.appendChild(tag);
+  });
+
+  // Equipment + mastery
+  const peq=document.getElementById('p-equip');peq.innerHTML='';
+  p.equipment.forEach(eq=>{const t=document.createElement('span');t.className='eq-tag';t.title=eq.desc;t.textContent=`${eq.icon} ${eq.name}`;peq.appendChild(t);});
+  Object.entries(G.mastery).forEach(([k,v])=>{if(v>0){const icons={atk:'⚔️',true:'🔮',heal:'💊',shield:'🛡️',crit:'💥'};const t=document.createElement('span');t.className='mastery-tag';t.textContent=`${icons[k]||'📈'}+${v}`;peq.appendChild(t);}});
+
+  // Debuffs
+  const pd=document.getElementById('p-debuffs');pd.innerHTML='';
+  if(G.poisonTurns>0){const t=document.createElement('span');t.className='debuff-tag';t.textContent=`🐍 Poison×${G.poisonTurns}`;pd.appendChild(t);}
+  if(G.cursedWound>0){const t=document.createElement('span');t.className='debuff-tag';t.textContent=`🩹 Wound×${G.cursedWound}`;pd.appendChild(t);}
+  if(G.frozenAbil>0){const t=document.createElement('span');t.className='debuff-tag';t.textContent=`🧊 Frozen×${G.frozenAbil}`;pd.appendChild(t);}
+  if(G.deathMark>0){const t=document.createElement('span');t.className='debuff-tag';t.textContent=`💀 Marked×${G.deathMark}`;pd.appendChild(t);}
+  if(G.berserkerBlood){const t=document.createElement('span');t.className='mastery-tag';t.textContent=`🔥 Berserk`;pd.appendChild(t);}
+  if(G.petrified){const t=document.createElement('span');t.className='debuff-tag';t.textContent=`🐍 Petrified`;pd.appendChild(t);}
+}
+
+function renderHand(mode){
+  const row=document.getElementById('cards-row');row.innerHTML='';
+  if(mode==='idle'||!G.hand||!G.hand.length)return;
+  G.hand.forEach((card,i)=>{
+    const el=document.createElement('div');el.className=`card ${card.cls}`;
+    el.innerHTML=`<span class="card-icon">${card.icon}</span><div class="card-name">${card.name}</div><div class="card-desc">${card.desc}</div>`;
+    el.onclick=()=>playCard(i);row.appendChild(el);
+  });
+}
+function disableCards(){document.querySelectorAll('.card').forEach(c=>c.classList.add('disabled'));}
+function enableCards(){document.querySelectorAll('.card').forEach(c=>c.classList.remove('disabled'));}
+function setTurn(m){
+  const el=document.getElementById('turn-ind');
+  if(m==='pt'){el.className='turn-ind pt';el.textContent='Your Turn — Play a Card';}
+  else if(m==='et'){el.className='turn-ind et';el.textContent="Enemy's Turn";}
+  else if(m==='sk'){el.className='turn-ind sk';el.textContent='Punishment — Choose';}
+  else{el.className='turn-ind';el.textContent='Flip to begin';}
+}
+function log(msg,type='neutral'){
+  const a=document.getElementById('log-area');
+  const el=document.createElement('div');el.className=`log-entry ${type}`;el.textContent=msg;
+  a.appendChild(el);a.scrollTop=a.scrollHeight;
+}
+function flash(id,type){
+  const el=document.getElementById(id);if(!el)return;
+  const f=document.createElement('div');f.className=`dmg-flash ${type}`;
+  el.style.position='relative';el.appendChild(f);setTimeout(()=>f.remove(),400);
+}
+function floatT(text,anchorId,color){
+  const anchor=document.getElementById(anchorId);if(!anchor)return;
+  const rect=anchor.getBoundingClientRect();
+  const el=document.createElement('div');el.className='float-text';el.textContent=text;el.style.color=color;
+  el.style.left=(rect.left+rect.width/2-30)+'px';el.style.top=(rect.top+rect.height/2-20)+'px';
+  document.body.appendChild(el);setTimeout(()=>el.remove(),1200);
+}
+
+function startGame(){
+  document.getElementById('title-screen').classList.remove('active');
+  document.getElementById('game-screen').classList.add('active');
+  initGame();
+}
+</script>
+</body>
+</html>
